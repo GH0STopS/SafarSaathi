@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Book Appointment - Safar-Saathi{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <h2><i class="fas fa-calendar-plus me-2"></i>Book Appointment</h2>
+            <a href="{% url 'patient:dashboard' %}" class="btn btn-secondary mb-3"><i class="fas fa-arrow-left me-2"></i>Back to Dashboard</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Appointment Details</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="appointment_date" class="form-label">Appointment Date & Time</label>
+                            <input type="datetime-local" class="form-control" id="appointment_date" name="appointment_date" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="appointment_type" class="form-label">Appointment Type</label>
+                            <select class="form-control" id="appointment_type" name="appointment_type" required>
+                                <option value="consultation">General Consultation</option>
+                                <option value="follow_up">Follow-up</option>
+                                <option value="checkup">Regular Checkup</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Additional Notes</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Book Appointment</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Clinic Information</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Clinic:</strong> {{ patient.current_clinic.name }}</p>
+                    <p><strong>Address:</strong> {{ patient.current_clinic.address }}</p>
+                    <p><strong>Phone:</strong> {{ patient.current_clinic.phone_number }}</p>
+                    <p><strong>Diseases Treated:</strong> {{ patient.current_clinic.diseases_treated }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

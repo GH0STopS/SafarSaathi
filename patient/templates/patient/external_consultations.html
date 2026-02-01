@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}External Consultations - Safar-Saathi{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <h2><i class="fas fa-globe me-2"></i>External Consultations</h2>
+            <a href="{% url 'patient:dashboard' %}" class="btn btn-secondary mb-3"><i class="fas fa-arrow-left me-2"></i>Back to Dashboard</a>
+            <a href="{% url 'patient:book_external_consultation' %}" class="btn btn-primary mb-3"><i class="fas fa-plus me-2"></i>Book External Consultation</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>My External Consultations</h5>
+                </div>
+                <div class="card-body">
+                    {% for consultation in consultations %}
+                    <div class="mb-3 p-3 border rounded">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h6>{{ consultation.consultation_type|title|replace:"_":" " }} at {{ consultation.requesting_clinic.name }}</h6>
+                                <p><strong>Date:</strong> {{ consultation.consultation_date }}</p>
+                                <p><strong>Location:</strong> {{ consultation.current_location }}</p>
+                                <p><strong>Stay Type:</strong> {{ consultation.stay_type|title }}</p>
+                                <p><strong>Reason:</strong> {{ consultation.reason }}</p>
+                                {% if consultation.notes %}
+                                <p><strong>Notes:</strong> {{ consultation.notes }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <span class="badge bg-{% if consultation.status == 'completed' %}success{% elif consultation.status == 'approved' %}info{% elif consultation.status == 'in_progress' %}warning{% elif consultation.status == 'cancelled' %}danger{% else %}secondary{% endif %} mb-2">
+                                    {{ consultation.status|title }}
+                                </span>
+                                {% if consultation.medical_data_access_granted %}
+                                <br><small class="text-success"><i class="fas fa-check-circle me-1"></i>Medical data shared</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-center">No external consultations found.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

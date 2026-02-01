@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Health Metrics - Safar-Saathi{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <h2><i class="fas fa-chart-line me-2"></i>Health Metrics</h2>
+            <a href="{% url 'patient:dashboard' %}" class="btn btn-secondary mb-3"><i class="fas fa-arrow-left me-2"></i>Back to Dashboard</a>
+            <a href="{% url 'patient:add_health_metric' %}" class="btn btn-primary mb-3"><i class="fas fa-plus me-2"></i>Add Health Metric</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Recent Health Metrics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Metric Type</th>
+                                    <th>Value</th>
+                                    <th>Source</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for metric in metrics %}
+                                <tr>
+                                    <td>{{ metric.recorded_at|date:"M d, Y H:i" }}</td>
+                                    <td>{{ metric.get_metric_type_display }}</td>
+                                    <td>{{ metric.value }} {{ metric.unit }}</td>
+                                    <td>{{ metric.get_source_display }}</td>
+                                    <td>{{ metric.notes|truncatechars:50 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No health metrics recorded yet.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Counselling Sessions - Safar-Saathi{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <h2><i class="fas fa-user-friends me-2"></i>Manage Counselling Sessions</h2>
+            <a href="{% url 'clinic:clinic_dashboard' %}" class="btn btn-secondary mb-3"><i class="fas fa-arrow-left me-2"></i>Back to Dashboard</a>
+            <a href="{% url 'clinic:schedule_counselling' %}" class="btn btn-primary mb-3"><i class="fas fa-plus me-2"></i>Schedule New Session</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>All Counselling Sessions</h5>
+                </div>
+                <div class="card-body">
+                    {% for session in sessions %}
+                    <div class="mb-3 p-3 border rounded">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h6>{{ session.patient.user.get_full_name|default:session.patient.user.username }} - {{ session.get_session_type_display }}</h6>
+                                <p><strong>Date:</strong> {{ session.session_date }}</p>
+                                <p><strong>Counsellor:</strong> {{ session.counsellor.get_full_name|default:session.counsellor.username }}</p>
+                                {% if session.notes %}
+                                <p><strong>Notes:</strong> {{ session.notes }}</p>
+                                {% endif %}
+                                {% if session.medical_updates %}
+                                <p><strong>Medical Updates:</strong> {{ session.medical_updates }}</p>
+                                {% endif %}
+                                {% if session.follow_up_required %}
+                                <p><strong>Follow-up:</strong> {{ session.follow_up_date|default:"Required" }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <span class="badge bg-{% if session.status == 'completed' %}success{% elif session.status == 'scheduled' %}primary{% elif session.status == 'in_progress' %}info{% elif session.status == 'cancelled' %}danger{% endif %} mb-2">
+                                    {{ session.status|title }}
+                                </span>
+                                <br>
+                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#updateModal{{ session.id }}">
+                                    Update Session
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Update Modal -->
+                    <div class="modal fade" id="updateModal{{ session.id }}" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Update Counselling Session</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form method="post" action="{% url 'clinic:update_counselling_session' session.id %}">
+                                    {% csrf_token %}
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label for="status{{ session.id }}" class="form-label">Status</label>
+                                            <select class="form-control" id="status{{ session.id }}" name="status" required>
+                                                <option value="scheduled" {% if session.status == 'scheduled' %}selected{% endif %}>Scheduled</option>
+                                                <option value="in_progress" {% if session.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                                                <option value="completed" {% if session.status == 'completed' %}selected{% endif %}>Completed</option>
+                                                <option value="cancelled" {% if session.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="medical_updates{{ session.id }}" class="form-label">Medical Updates</label>
+                                            <textarea class="form-control" id="medical_updates{{ session.id }}" name="medical_updates" rows="3" placeholder="Any medical data updates from this session">{{ session.medical_updates }}</textarea>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="notes{{ session.id }}" class="form-label">Session Notes</label>
+                                            <textarea class="form-control" id="notes{{ session.id }}" name="notes" rows="3" placeholder="Additional notes about the session"></textarea>
+                                        </div>
+                                        <div class="mb-3 form-check">
+                                            <input type="checkbox" class="form-check-input" id="follow_up{{ session.id }}" name="follow_up_required" {% if session.follow_up_required %}checked{% endif %}>
+                                            <label class="form-check-label" for="follow_up{{ session.id }}">Follow-up Required</label>
+                                        </div>
+                                        <div class="mb-3" id="follow_up_date_div{{ session.id }}" {% if not session.follow_up_required %}style="display: none;"{% endif %}>
+                                            <label for="follow_up_date{{ session.id }}" class="form-label">Follow-up Date</label>
+                                            <input type="datetime-local" class="form-control" id="follow_up_date{{ session.id }}" name="follow_up_date" value="{% if session.follow_up_date %}{{ session.follow_up_date|date:'Y-m-d\TH:i' }}{% endif %}">
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        <button type="submit" class="btn btn-primary">Update Session</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-center">No counselling sessions found.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var sessionIds = [
+{% for session in sessions %}
+        '{{ session.id }}'{% if not forloop.last %},{% endif %}
+{% endfor %}
+    ];
+    sessionIds.forEach(function(sessionId) {
+        document.getElementById('follow_up' + sessionId).addEventListener('change', function() {
+            var div = document.getElementById('follow_up_date_div' + sessionId);
+            if (this.checked) {
+                div.style.display = 'block';
+            } else {
+                div.style.display = 'none';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

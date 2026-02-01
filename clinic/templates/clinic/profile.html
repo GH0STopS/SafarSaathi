@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}Clinic Profile - Safar-Saathi{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4><i class="fas fa-clinic-medical me-2"></i>Clinic Profile</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <h5 class="mb-3">Clinic Information</h5>
+                        <div class="mb-3">
+                            <label for="id_name" class="form-label">Clinic Name</label>
+                            <input type="text" class="form-control" id="id_name" name="name"
+                                   value="{{ clinic.name }}" maxlength="200" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_email" class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="id_email" name="email"
+                                   value="{{ user.email }}" required>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_phone_number" class="form-label">Phone Number</label>
+                                <input type="text" class="form-control" id="id_phone_number" name="phone_number"
+                                       value="{{ clinic.phone_number }}" maxlength="15">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="id_location" class="form-label">Location</label>
+                                <input type="text" class="form-control" id="id_location" name="location"
+                                       value="{{ clinic.location }}" maxlength="100">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_address" class="form-label">Address</label>
+                            <textarea class="form-control" id="id_address" name="address" rows="3" required>{{ clinic.address }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Approval Status</label>
+                            <div>
+                                <span class="badge bg-{% if clinic.is_approved %}success{% else %}warning{% endif %} fs-6">
+                                    {% if clinic.is_approved %}Approved{% else %}Pending Approval{% endif %}
+                                </span>
+                            </div>
+                            {% if not clinic.is_approved %}
+                            <div class="form-text">Your clinic is pending approval from administrators.</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Specializations</label>
+                            <div class="diseases-display">
+                                {% for disease in clinic.diseases_treated.all %}
+                                <span class="badge bg-primary me-1 mb-1">{{ disease.name }}</span>
+                                {% empty %}
+                                <span class="text-muted">No specializations selected</span>
+                                {% endfor %}
+                            </div>
+                            <div class="form-text">Contact administrators to update your clinic's specializations.</div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-1"></i>Save Changes
+                            </button>
+                            <a href="{% url 'clinic:clinic_dashboard' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

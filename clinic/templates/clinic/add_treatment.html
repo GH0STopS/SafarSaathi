@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Treatment Record - Safar-Saathi{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header"
+                style="background: linear-gradient(90deg, #dc3545 0%, #b02a37 100%); color: white;">
+                <h3 class="card-title mb-0"><i class="fas fa-plus me-2"></i>Add Treatment Record</h3>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_patient" class="form-label">Select Patient</label>
+                        <select name="patient" id="id_patient" class="form-select" required>
+                            <option value="">Choose a patient</option>
+                            {% for patient in patients %}
+                            <option value="{{ patient.id }}">{{ patient.user.get_full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_disease" class="form-label">Disease</label>
+                        <input type="text" name="disease" id="id_disease" class="form-control" value="HIV" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_details" class="form-label">Treatment Details</label>
+                        <textarea name="details" id="id_details" class="form-control" rows="5" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Record</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

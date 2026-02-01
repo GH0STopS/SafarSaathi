@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - Safar-Saathi{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title text-center">Patient Registration</h3>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                {% for error in form.non_field_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.username.id_for_label }}" class="form-label">
+                                <i class="fas fa-user me-1"></i>{{ form.username.label }}
+                            </label>
+                            {{ form.username }}
+                            {% if form.username.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.username.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">
+                                <i class="fas fa-envelope me-1"></i>{{ form.email.label }}
+                            </label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.email.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.first_name.id_for_label }}" class="form-label">
+                                <i class="fas fa-user-tag me-1"></i>{{ form.first_name.label }}
+                            </label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.first_name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.last_name.id_for_label }}" class="form-label">
+                                <i class="fas fa-user-tag me-1"></i>{{ form.last_name.label }}
+                            </label>
+                            {{ form.last_name }}
+                            {% if form.last_name.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.last_name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.password.id_for_label }}" class="form-label">
+                                <i class="fas fa-lock me-1"></i>{{ form.password.label }}
+                            </label>
+                            {{ form.password }}
+                            {% if form.password.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.password.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.confirm_password.id_for_label }}" class="form-label">
+                                <i class="fas fa-lock me-1"></i>{{ form.confirm_password.label }}
+                            </label>
+                            {{ form.confirm_password }}
+                            {% if form.confirm_password.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.confirm_password.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.date_of_birth.id_for_label }}" class="form-label">
+                            <i class="fas fa-calendar me-1"></i>{{ form.date_of_birth.label }}
+                        </label>
+                        {{ form.date_of_birth }}
+                        {% if form.date_of_birth.errors %}
+                            <div class="text-danger small">
+                                {% for error in form.date_of_birth.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.phone_number.id_for_label }}" class="form-label">
+                            <i class="fas fa-phone me-1"></i>{{ form.phone_number.label }}
+                        </label>
+                        {{ form.phone_number }}
+                        {% if form.phone_number.errors %}
+                            <div class="text-danger small">
+                                {% for error in form.phone_number.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.address.id_for_label }}" class="form-label">
+                            <i class="fas fa-map-marker-alt me-1"></i>{{ form.address.label }}
+                        </label>
+                        {{ form.address }}
+                        {% if form.address.errors %}
+                            <div class="text-danger small">
+                                {% for error in form.address.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <button type="button" id="get-location-btn" class="btn btn-secondary mt-2">
+                            <i class="fas fa-location-arrow me-1"></i>Use Current Location
+                        </button>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.current_location.id_for_label }}" class="form-label">
+                            <i class="fas fa-map me-1"></i>{{ form.current_location.label }}
+                        </label>
+                        {{ form.current_location }}
+                        {% if form.current_location.errors %}
+                            <div class="text-danger small">
+                                {% for error in form.current_location.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        {{ form.consent_given }}
+                        <label for="{{ form.consent_given.id_for_label }}" class="form-check-label">
+                            {{ form.consent_given.label }} I consent to the processing of my data for treatment continuity.
+                        </label>
+                        {% if form.consent_given.errors %}
+                            <div class="text-danger small">
+                                {% for error in form.consent_given.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-user-plus me-1"></i>Register
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btn = document.getElementById('get-location-btn');
+    const addressEl = document.getElementById('id_address');
+    const locationEl = document.getElementById('id_current_location');
+
+    btn.addEventListener('click', function() {
+        if (navigator.geolocation) {
+            btn.textContent = 'Getting location...';
+            navigator.geolocation.getCurrentPosition(function(position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                // Reverse geocode
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Geocoding service unavailable');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data && data.display_name) {
+                            addressEl.value = data.display_name;
+                            // Try to extract city/town from address details
+                            let location = '';
+                            if (data.address) {
+                                location = data.address.city || data.address.town || data.address.village || data.address.state || data.address.country || '';
+                            }
+                            locationEl.value = location;
+                            btn.textContent = 'Use Current Location';
+                        } else {
+                            throw new Error('Unable to get address for this location');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Geocoding error:', error);
+                        alert('Error getting address: ' + error.message + '. Please enter your address manually.');
+                        btn.textContent = 'Use Current Location';
+                    });
+            }, function(error) {
+                console.error('Geolocation error:', error);
+                let errorMessage = 'Location access denied.';
+                if (error.code === error.PERMISSION_DENIED) {
+                    errorMessage = 'Location access denied. Please allow location access and try again.';
+                } else if (error.code === error.POSITION_UNAVAILABLE) {
+                    errorMessage = 'Location information is unavailable.';
+                } else if (error.code === error.TIMEOUT) {
+                    errorMessage = 'Location request timed out.';
+                }
+                alert(errorMessage);
+                btn.textContent = 'Use Current Location';
+            });
+        } else {
+            alert('Geolocation is not supported by this browser.');
+        }
+    });
+});
+</script>
+{% endblock %}

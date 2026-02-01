@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Emergency Access Dashboard - Safar-Saathi{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <h2>Emergency Access History</h2>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-warning">
+                    <h5>Emergency Accesses</h5>
+                </div>
+                <div class="card-body">
+                    {% for access in accesses %}
+                    <div class="mb-3 p-3 border rounded">
+                        <p><strong>Clinic:</strong> {{ access.clinic.name }}</p>
+                        <p><strong>Granted:</strong> {{ access.granted_at }}</p>
+                        <p><strong>Expires:</strong> {{ access.expires_at }}</p>
+                        <p><strong>Status:</strong> {% if access.is_active %}Active{% else %}Expired{% endif %}</p>
+                    </div>
+                    {% empty %}
+                    <p>No emergency accesses.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

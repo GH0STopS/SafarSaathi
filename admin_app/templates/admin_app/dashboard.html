@@ -1,0 +1,328 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - Safar-Saathi{% endblock %}
+
+{% block content %}
+<!-- Admin Navigation Bar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow mb-4">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="{% url 'admin_app:admin_dashboard' %}">
+            <i class="fas fa-cog me-2"></i>Admin Dashboard
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbar">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="adminNavbar">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'admin_app:admin_dashboard' %}">
+                        <i class="fas fa-tachometer-alt me-1"></i>Overview
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'admin_app:user_management' %}">
+                        <i class="fas fa-users-cog me-1"></i>User Management
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'admin_app:disease_management' %}">
+                        <i class="fas fa-viruses me-1"></i>Disease Management
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'admin_app:audit_logs' %}">
+                        <i class="fas fa-file-alt me-1"></i>Audit Logs
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-chart-bar me-1"></i>Reports
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{% url 'admin_app:user_management' %}"><i class="fas fa-users me-2"></i>User Statistics</a></li>
+                        <li><a class="dropdown-item" href="{% url 'admin_app:user_management' %}"><i class="fas fa-clinic-medical me-2"></i>Clinic Reports</a></li>
+                        <li><a class="dropdown-item" href="{% url 'admin_app:audit_logs' %}"><i class="fas fa-exclamation-triangle me-2"></i>Emergency Reports</a></li>
+                    </ul>
+                </li>
+            </ul>
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <span class="navbar-text me-3">
+                        <i class="fas fa-user-shield me-1"></i>Welcome, {{ user.get_full_name|default:user.username }}
+                    </span>
+                </li>
+                <li class="nav-item">
+                    <form method="post" action="{% url 'logout' %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-light btn-sm">
+                            <i class="fas fa-sign-out-alt me-1"></i>Logout
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h2 class="mb-1"><i class="fas fa-tachometer-alt me-2 text-primary"></i>System Overview</h2>
+                    <p class="text-muted mb-0">Monitor and manage the Safar-Saathi healthcare platform</p>
+                </div>
+                <div class="text-end">
+                    <small class="text-muted">
+                        <i class="fas fa-calendar me-1"></i>Last updated: {{ current_time|date:"M d, Y H:i" }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overview Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-primary border-0 h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-users fa-2x me-3"></i>
+                            <div>
+                                <h5 class="card-title mb-0">Total Users</h5>
+                                <small>Registered accounts</small>
+                            </div>
+                        </div>
+                        <h3 class="mb-0">{{ total_users }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-success border-0 h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-user-check fa-2x me-3"></i>
+                            <div>
+                                <h5 class="card-title mb-0">Active Patients</h5>
+                                <small>Active patient accounts</small>
+                            </div>
+                        </div>
+                        <h3 class="mb-0">{{ active_patients }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-info border-0 h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-clinic-medical fa-2x me-3"></i>
+                            <div>
+                                <h5 class="card-title mb-0">Active Clinics</h5>
+                                <small>Active healthcare facilities</small>
+                            </div>
+                        </div>
+                        <h3 class="mb-0">{{ active_clinics }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-danger border-0 h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                            <div>
+                                <h5 class="card-title mb-0">Emergency Cases</h5>
+                                <small>Active emergencies</small>
+                            </div>
+                        </div>
+                        <h3 class="mb-0">{{ total_emergencies }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card text-white bg-warning border-0 h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-clock fa-2x me-3"></i>
+                            <div>
+                                <h5 class="card-title mb-0">Pending Clinics</h5>
+                                <small>Awaiting approval</small>
+                            </div>
+                        </div>
+                        <h3 class="mb-0">{{ pending_clinics }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card text-white bg-secondary border-0 h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-user-times fa-2x me-3"></i>
+                            <div>
+                                <h5 class="card-title mb-0">Inactive Patients</h5>
+                                <small>Deactivated accounts</small>
+                            </div>
+                        </div>
+                        <h3 class="mb-0">{{ inactive_patients }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card text-white bg-dark border-0 h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-times-circle fa-2x me-3"></i>
+                            <div>
+                                <h5 class="card-title mb-0">Inactive Clinics</h5>
+                                <small>Deactivated facilities</small>
+                            </div>
+                        </div>
+                        <h3 class="mb-0">{{ inactive_clinics }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-check-circle text-success fa-lg me-2"></i>
+                        <h5 class="mb-0">Clinic Approvals</h5>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% for clinic in clinics %}
+                    <div class="mb-3 p-3 border rounded bg-light">
+                        <div class="d-flex align-items-start justify-content-between">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-hospital text-primary me-2"></i>
+                                    <h6 class="mb-0">{{ clinic.name }}</h6>
+                                </div>
+                                <p class="mb-1 text-muted small"><i class="fas fa-map-marker-alt me-1"></i>{{ clinic.address }}</p>
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-{% if clinic.is_approved %}success{% else %}warning{% endif %} me-2">
+                                        <i class="fas fa-{% if clinic.is_approved %}check{% else %}clock{% endif %} me-1"></i>
+                                        {{ clinic.is_approved|yesno:"Approved,Pending" }}
+                                    </span>
+                                </div>
+                            </div>
+                            {% if not clinic.is_approved %}
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'admin_app:approve_clinic' clinic.id %}" class="btn btn-success btn-sm">
+                                    <i class="fas fa-check me-1"></i>Approve
+                                </a>
+                                <a href="{% url 'admin_app:reject_clinic' clinic.id %}" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-times me-1"></i>Reject
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
+                        <p class="text-muted">All clinics have been processed.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-history text-info fa-lg me-2"></i>
+                        <h5 class="mb-0">Recent Audit Logs</h5>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% for log in audit_logs %}
+                    <div class="d-flex align-items-start mb-3 pb-2 border-bottom">
+                        <i class="fas fa-circle text-primary small me-3 mt-1"></i>
+                        <div class="flex-grow-1">
+                            <small class="text-muted d-block">
+                                <i class="fas fa-calendar me-1"></i>{{ log.timestamp|date:"M d, H:i" }}
+                            </small>
+                            <small class="d-block">
+                                <strong>{{ log.user.username }}</strong> - {{ log.action }}
+                            </small>
+                            {% if log.details %}
+                            <small class="text-muted d-block">{{ log.details }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-file-alt text-muted fa-3x mb-3"></i>
+                        <p class="text-muted">No recent audit logs.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-bolt text-warning fa-lg me-2"></i>
+                        <h5 class="mb-0">Quick Actions</h5>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <a href="{% url 'admin_app:user_management' %}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center py-4">
+                                <i class="fas fa-users-cog fa-2x mb-2"></i>
+                                <span>Manage Users & Clinics</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'admin_app:audit_logs' %}" class="btn btn-outline-secondary w-100 h-100 d-flex flex-column align-items-center justify-content-center py-4">
+                                <i class="fas fa-file-alt fa-2x mb-2"></i>
+                                <span>View All Audit Logs</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="#" class="btn btn-outline-info w-100 h-100 d-flex flex-column align-items-center justify-content-center py-4">
+                                <i class="fas fa-chart-bar fa-2x mb-2"></i>
+                                <span>Generate Reports</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="#" class="btn btn-outline-success w-100 h-100 d-flex flex-column align-items-center justify-content-center py-4">
+                                <i class="fas fa-cog fa-2x mb-2"></i>
+                                <span>System Settings</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

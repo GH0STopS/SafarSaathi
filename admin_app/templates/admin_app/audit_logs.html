@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Audit Logs - Safar-Saathi{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <h2><i class="fas fa-file-alt me-2"></i>Audit Logs</h2>
+            <a href="{% url 'admin_app:admin_dashboard' %}" class="btn btn-secondary mb-3"><i class="fas fa-arrow-left me-2"></i>Back to Dashboard</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Filter Logs</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="user" class="form-label">User</label>
+                            <input type="text" class="form-control" id="user" name="user" value="{{ user_filter }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="action" class="form-label">Action</label>
+                            <select class="form-control" id="action" name="action">
+                                <option value="">All</option>
+                                <option value="login" {% if action_filter == 'login' %}selected{% endif %}>Login</option>
+                                <option value="logout" {% if action_filter == 'logout' %}selected{% endif %}>Logout</option>
+                                <option value="view" {% if action_filter == 'view' %}selected{% endif %}>View</option>
+                                <option value="create" {% if action_filter == 'create' %}selected{% endif %}>Create</option>
+                                <option value="update" {% if action_filter == 'update' %}selected{% endif %}>Update</option>
+                                <option value="delete" {% if action_filter == 'delete' %}selected{% endif %}>Delete</option>
+                                <option value="transfer" {% if action_filter == 'transfer' %}selected{% endif %}>Transfer</option>
+                                <option value="emergency" {% if action_filter == 'emergency' %}selected{% endif %}>Emergency</option>
+                                <option value="approve" {% if action_filter == 'approve' %}selected{% endif %}>Approve</option>
+                                <option value="reject" {% if action_filter == 'reject' %}selected{% endif %}>Reject</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="date_from" class="form-label">From Date</label>
+                            <input type="date" class="form-control" id="date_from" name="date_from" value="{{ date_from }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="date_to" class="form-label">To Date</label>
+                            <input type="date" class="form-control" id="date_to" name="date_to" value="{{ date_to }}">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">Filter</button>
+                            <a href="{% url 'admin_app:audit_logs' %}" class="btn btn-secondary">Clear</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>All Audit Logs</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in logs %}
+                            <tr>
+                                <td>{{ log.timestamp }}</td>
+                                <td>{{ log.user.username }}</td>
+                                <td>{{ log.action }}</td>
+                                <td>{{ log.details }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4">No logs available.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}My Appointments - Safar-Saathi{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <h2><i class="fas fa-calendar-check me-2"></i>My Appointments</h2>
+            <a href="{% url 'patient:dashboard' %}" class="btn btn-secondary mb-3"><i class="fas fa-arrow-left me-2"></i>Back to Dashboard</a>
+            <a href="{% url 'patient:book_appointment' %}" class="btn btn-primary mb-3"><i class="fas fa-plus me-2"></i>Book New Appointment</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Appointment History</h5>
+                </div>
+                <div class="card-body">
+                    {% for appointment in appointments %}
+                    <div class="mb-3 p-3 border rounded">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h6>{{ appointment.appointment_type|title }}</h6>
+                                <p><strong>Date:</strong> {{ appointment.appointment_date }}</p>
+                                <p><strong>Clinic:</strong> {{ appointment.clinic.name }}</p>
+                                <p><strong>Doctor:</strong> {{ appointment.doctor.get_full_name|default:appointment.doctor.username }}</p>
+                                {% if appointment.notes %}
+                                <p><strong>Notes:</strong> {{ appointment.notes }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <span class="badge bg-{% if appointment.status == 'completed' %}success{% elif appointment.status == 'scheduled' %}primary{% elif appointment.status == 'confirmed' %}info{% elif appointment.status == 'cancelled' %}danger{% else %}warning{% endif %}">
+                                    {{ appointment.status|title }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-center">No appointments found.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

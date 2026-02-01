@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Emergency Alerts - Safar-Saathi{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <h2><i class="fas fa-exclamation-triangle text-danger me-2"></i>Emergency Alerts</h2>
+            <a href="{% url 'clinic:clinic_dashboard' %}" class="btn btn-secondary mb-3"><i class="fas fa-arrow-left me-2"></i>Back to Dashboard</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            {% for alert in alerts %}
+            <div class="card border-danger mb-3 {% if alert.resolution_status == 'pending' %}bg-light{% endif %}">
+                <div class="card-header {% if alert.resolution_status == 'pending' %}bg-danger text-white{% else %}bg-success text-white{% endif %}">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5><i class="fas fa-bullhorn me-2"></i>Emergency Alert - {{ alert.patient.user.get_full_name|default:alert.patient.user.username }}
+                                {% if alert.patient.current_clinic != clinic %}
+                                <span class="badge bg-warning text-dark ms-2">
+                                    <i class="fas fa-map-marker-alt me-1"></i>Nearby Patient
+                                </span>
+                                {% endif %}
+                            </h5>
+                            <small>{{ alert.triggered_at }}</small>
+                            {% if alert.patient.current_clinic != clinic %}
+                            <br><small class="text-warning">
+                                <i class="fas fa-hospital me-1"></i>Home Clinic: {{ alert.patient.current_clinic.name }}
+                            </small>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <span class="badge bg-{% if alert.resolution_status == 'pending' %}warning{% elif alert.resolution_status == 'responding' %}info{% elif alert.resolution_status == 'resolved' %}success{% else %}secondary{% endif %}">
+                                {{ alert.resolution_status|title }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <p><strong>Alert Type:</strong> {{ alert.alert_type|title|replace:"_":" " }}</p>
+                            <p><strong>Message:</strong> {{ alert.alert_message }}</p>
+                            {% if alert.location_address %}
+                            <p><strong>Location:</strong> {{ alert.location_address }}</p>
+                            {% endif %}
+                            {% if alert.responded_by %}
+                            <p><strong>Responded by:</strong> {{ alert.responded_by.get_full_name|default:alert.responded_by.username }} at {{ alert.response_time }}</p>
+                            {% endif %}
+                            {% if alert.resolution_notes %}
+                            <p><strong>Resolution Notes:</strong> {{ alert.resolution_notes }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 text-end">
+                            {% if alert.resolution_status == 'pending' %}
+                            <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#respondModal{{ alert.id }}">
+                                <i class="fas fa-reply me-1"></i>Respond
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Response Modal -->
+            <div class="modal fade" id="respondModal{{ alert.id }}" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Respond to Emergency Alert</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form method="post" action="{% url 'emergency:respond_to_emergency' alert.id %}">
+                            {% csrf_token %}
+                            <div class="modal-body">
+                                {% if alert.patient.current_clinic != clinic %}
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>Nearby Patient Alert:</strong> Responding to this emergency will automatically request critical medical data from the patient's home clinic ({{ alert.patient.current_clinic.name }}).
+                                </div>
+                                {% endif %}
+                                <div class="mb-3">
+                                    <label for="resolution_status{{ alert.id }}" class="form-label">Response Status</label>
+                                    <select class="form-control" id="resolution_status{{ alert.id }}" name="resolution_status" required>
+                                        <option value="responding">Responding</option>
+                                        <option value="resolved">Resolved</option>
+                                        <option value="false_alarm">False Alarm</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="resolution_notes{{ alert.id }}" class="form-label">Response Notes</label>
+                                    <textarea class="form-control" id="resolution_notes{{ alert.id }}" name="resolution_notes" rows="3" placeholder="Describe the response actions taken..."></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-danger">Submit Response</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
+                    <h5>No Active Emergency Alerts</h5>
+                    <p>All emergency situations have been addressed.</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

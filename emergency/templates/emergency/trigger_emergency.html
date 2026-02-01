@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block title %}Emergency Alert - Safar-Saathi{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <h2><i class="fas fa-exclamation-triangle text-danger me-2"></i>Emergency Alert</h2>
+            <a href="{% url 'emergency:emergency_dashboard' %}" class="btn btn-secondary mb-3"><i class="fas fa-arrow-left me-2"></i>Back to Emergency Dashboard</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5><i class="fas fa-bullhorn me-2"></i>Send Emergency Alert</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <strong>Warning:</strong> This will send an immediate emergency alert to your clinic and emergency services. Use only in genuine emergencies.
+                    </div>
+                    <form method="post" id="emergencyForm">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="emergency_type" class="form-label">Emergency Type</label>
+                            <select class="form-control" id="emergency_type" name="emergency_type" required>
+                                <option value="medical">Medical Emergency</option>
+                                <option value="mental_health">Mental Health Crisis</option>
+                                <option value="violence">Violence/Domestic Abuse</option>
+                                <option value="overdose">Drug Overdose</option>
+                                <option value="suicide">Suicidal Thoughts</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="severity_level" class="form-label">Severity Level</label>
+                            <select class="form-control" id="severity_level" name="severity_level" required>
+                                <option value="low">Low - Needs attention soon</option>
+                                <option value="medium" selected>Medium - Urgent but not life-threatening</option>
+                                <option value="high">High - Serious condition</option>
+                                <option value="critical">Critical - Life-threatening emergency</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="alert_message" class="form-label">Describe the Emergency</label>
+                            <textarea class="form-control" id="alert_message" name="alert_message" rows="4" required placeholder="Please describe what is happening and what help you need..."></textarea>
+                        </div>
+
+                        <!-- Location fields (will be auto-filled by geolocation) -->
+                        <input type="hidden" id="location_lat" name="location_lat">
+                        <input type="hidden" id="location_lng" name="location_lng">
+                        <input type="hidden" id="location_address" name="location_address">
+
+                        <div class="mb-3">
+                            <div id="locationStatus" class="text-muted">
+                                <i class="fas fa-map-marker-alt me-1"></i>Getting your location...
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-danger btn-lg">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Send Emergency Alert
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Emergency Contacts</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>National Emergency:</strong> 112</p>
+                    <p><strong>Police:</strong> 100</p>
+                    <p><strong>Medical Emergency:</strong> 108</p>
+                    {% if patient.current_clinic %}
+                    <p><strong>Your Clinic:</strong><br>{{ patient.current_clinic.phone_number }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5>What Happens Next?</h5>
+                </div>
+                <div class="card-body">
+                    <ol>
+                        <li>Alert sent to your clinic</li>
+                        <li>Emergency services notified</li>
+                        <li>Clinic staff will respond</li>
+                        <li>Medical help dispatched if needed</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Get user's location
+navigator.geolocation.getCurrentPosition(function(position) {
+    document.getElementById('location_lat').value = position.coords.latitude;
+    document.getElementById('location_lng').value = position.coords.longitude;
+
+    // Reverse geocode to get address
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('location_address').value = data.display_name;
+            document.getElementById('locationStatus').innerHTML = '<i class="fas fa-check-circle text-success me-1"></i>Location detected';
+        })
+        .catch(error => {
+            document.getElementById('locationStatus').innerHTML = '<i class="fas fa-exclamation-triangle text-warning me-1"></i>Location detection failed';
+        });
+}, function(error) {
+    document.getElementById('locationStatus').innerHTML = '<i class="fas fa-times-circle text-danger me-1"></i>Unable to get location. Please enable location services.';
+});
+</script>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}Mental Health Dashboard - Safar-Saathi{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <h2>Mental Health Support</h2>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Your Sessions</h5>
+                </div>
+                <div class="card-body">
+                    {% for session in sessions %}
+                    <div class="mb-3 p-3 border rounded">
+                        <p><strong>Counselor:</strong> {{ session.counselor.name }}</p>
+                        <p><strong>Date:</strong> {{ session.session_date }}</p>
+                        <p><strong>Notes:</strong> {{ session.notes }}</p>
+                    </div>
+                    {% empty %}
+                    <p>No sessions yet. <a href="{% url 'mental_health:request_session' %}">Request a session</a></p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

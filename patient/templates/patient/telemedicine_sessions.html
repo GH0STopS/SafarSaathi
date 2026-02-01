@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Telemedicine Sessions - Safar-Saathi{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <h2><i class="fas fa-video me-2"></i>Telemedicine Sessions</h2>
+            <a href="{% url 'patient:dashboard' %}" class="btn btn-secondary mb-3"><i class="fas fa-arrow-left me-2"></i>Back to Dashboard</a>
+            <a href="{% url 'patient:book_telemedicine' %}" class="btn btn-primary mb-3"><i class="fas fa-plus me-2"></i>Book Telemedicine Session</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>My Telemedicine Sessions</h5>
+                </div>
+                <div class="card-body">
+                    {% for session in sessions %}
+                    <div class="mb-3 p-3 border rounded">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h6>{{ session.session_type|title }} with {{ session.doctor.get_full_name|default:session.doctor.username }}</h6>
+                                <p><strong>Date:</strong> {{ session.session_date }}</p>
+                                <p><strong>Clinic:</strong> {{ session.clinic.name }}</p>
+                                {% if session.meeting_link %}
+                                <p><strong>Meeting Link:</strong> <a href="{{ session.meeting_link }}" target="_blank">{{ session.meeting_link }}</a></p>
+                                {% endif %}
+                                {% if session.notes %}
+                                <p><strong>Notes:</strong> {{ session.notes }}</p>
+                                {% endif %}
+                                {% if session.duration_minutes %}
+                                <p><strong>Duration:</strong> {{ session.duration_minutes }} minutes</p>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <span class="badge bg-{% if session.status == 'completed' %}success{% elif session.status == 'scheduled' %}primary{% elif session.status == 'in_progress' %}warning{% elif session.status == 'cancelled' %}danger{% else %}secondary{% endif %} mb-2">
+                                    {{ session.status|title }}
+                                </span>
+                                {% if session.status == 'scheduled' and session.meeting_link %}
+                                <br><a href="{{ session.meeting_link }}" target="_blank" class="btn btn-sm btn-success">Join Session</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-center">No telemedicine sessions found.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

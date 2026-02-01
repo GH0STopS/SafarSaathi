@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Emergency Access - Safar-Saathi{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4>Emergency Access Trigger</h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-danger">This will grant temporary access to your records for emergency treatment.</p>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="clinic" class="form-label">Select Clinic</label>
+                            <select class="form-control" id="clinic" name="clinic" required>
+                                <option value="">Choose a clinic...</option>
+                                {% for clinic in clinics %}
+                                <option value="{{ clinic.id }}">{{ clinic.name }} - {{ clinic.location }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reason" class="form-label">Emergency Reason</label>
+                            <textarea class="form-control" id="reason" name="reason" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-danger btn-lg">Trigger Emergency Access</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

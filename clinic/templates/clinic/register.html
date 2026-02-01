@@ -1,0 +1,821 @@
+{% extends 'base.html' %}
+
+{% block title %}Clinic Registration - Safar-Saathi{% endblock %}
+
+{% block content %}
+<style>
+.disease-selection-container {
+    position: relative;
+}
+
+.selected-diseases-tags {
+    min-height: 30px;
+    padding: 5px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+}
+
+.disease-tag {
+    display: inline-flex;
+    align-items: center;
+    background-color: #007bff;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 14px;
+    margin: 2px;
+}
+
+.disease-tag .remove-tag {
+    margin-left: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.disease-tag .remove-tag:hover {
+    color: #ffcccc;
+}
+
+.autocomplete-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background-color: white;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.autocomplete-list {
+    padding: 0;
+    margin: 0;
+}
+
+.autocomplete-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #f8f9fa;
+    transition: background-color 0.2s;
+}
+
+.autocomplete-item:hover {
+    background-color: #f8f9fa;
+}
+
+.autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+.autocomplete-item.highlighted {
+    background-color: #e3f2fd;
+}
+</style>
+<div class="container mt-3">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4>Clinic Registration</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Alert container for dynamic messages -->
+                    <div id="alert-container"></div>
+
+                    <form method="post" id="clinic-registration-form">
+                        {% csrf_token %}
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                <ul class="mb-0">
+                                    {% for error in form.non_field_errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.username.id_for_label }}" class="form-label">
+                                    <i class="fas fa-user me-1"></i>{{ form.username.label }}
+                                </label>
+                                {{ form.username }}
+                                <div class="invalid-feedback" id="username-error">
+                                    {% for error in form.username.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                                <div class="valid-feedback" id="username-success"></div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.email.id_for_label }}" class="form-label">
+                                    <i class="fas fa-envelope me-1"></i>{{ form.email.label }}
+                                </label>
+                                {{ form.email }}
+                                <div class="invalid-feedback" id="email-error">
+                                    {% for error in form.email.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                                <div class="valid-feedback" id="email-success"></div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.password.id_for_label }}" class="form-label">
+                                    <i class="fas fa-lock me-1"></i>{{ form.password.label }}
+                                </label>
+                                {{ form.password }}
+                                <div class="invalid-feedback" id="password-error">
+                                    {% for error in form.password.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                                <div class="valid-feedback" id="password-success"></div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.confirm_password.id_for_label }}" class="form-label">
+                                    <i class="fas fa-lock me-1"></i>{{ form.confirm_password.label }}
+                                </label>
+                                {{ form.confirm_password }}
+                                <div class="invalid-feedback" id="confirm-password-error">
+                                    {% for error in form.confirm_password.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                                <div class="valid-feedback" id="confirm-password-success"></div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.name.id_for_label }}" class="form-label">
+                                    <i class="fas fa-clinic-medical me-1"></i>{{ form.name.label }}
+                                </label>
+                                {{ form.name }}
+                                <div class="invalid-feedback" id="name-error">
+                                    {% for error in form.name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                                <div class="valid-feedback" id="name-success"></div>
+                            </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.address.id_for_label }}" class="form-label">
+                                <i class="fas fa-map-marker-alt me-1"></i>{{ form.address.label }}
+                            </label>
+                            {{ form.address }}
+                            <div class="invalid-feedback" id="address-error">
+                                {% for error in form.address.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            <div class="valid-feedback" id="address-success"></div>
+                            <button type="button" id="get-location-btn" class="btn btn-secondary mt-2">
+                                <i class="fas fa-location-arrow me-1"></i>Use Current Location
+                            </button>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.phone_number.id_for_label }}" class="form-label">
+                                    <i class="fas fa-phone me-1"></i>{{ form.phone_number.label }}
+                                </label>
+                                {{ form.phone_number }}
+                                <div class="invalid-feedback" id="phone-number-error">
+                                    {% for error in form.phone_number.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                                <div class="valid-feedback" id="phone-number-success"></div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.location.id_for_label }}" class="form-label">
+                                    <i class="fas fa-map me-1"></i>{{ form.location.label }}
+                                </label>
+                                {{ form.location }}
+                                <div class="invalid-feedback" id="location-error">
+                                    {% for error in form.location.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                                <div class="valid-feedback" id="location-success"></div>
+                            </div>
+                        </div>
+
+                            <div class="mb-2">
+                                <label for="disease-input" class="form-label">
+                                    <i class="fas fa-viruses me-1"></i>Diseases Treated
+                                </label>
+                                <div class="disease-selection-container">
+                                    <!-- Selected diseases tags -->
+                                    <div id="selected-diseases-tags" class="selected-diseases-tags mb-2">
+                                        <small class="text-muted">No diseases selected</small>
+                                    </div>
+                                    <!-- Disease input with autocomplete -->
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="disease-input" placeholder="Type to search diseases..." autocomplete="off">
+                                        <button class="btn btn-outline-secondary" type="button" id="add-disease-btn">
+                                            <i class="fas fa-plus"></i> Add
+                                        </button>
+                                    </div>
+                                    <!-- Autocomplete dropdown -->
+                                    <div class="autocomplete-dropdown" id="autocomplete-dropdown" style="display: none;">
+                                        <div id="autocomplete-list" class="autocomplete-list"></div>
+                                    </div>
+                                    <!-- Hidden inputs for selected diseases -->
+                                    <div id="hidden-disease-inputs"></div>
+                                </div>
+                                </div>
+                                <div class="invalid-feedback" id="diseases-error">
+                                    {% for error in form.diseases_treated.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                                <div class="valid-feedback" id="diseases-success"></div>
+                                <div class="form-text">{{ form.diseases_treated.help_text }}</div>
+                            </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success" id="submit-btn">
+                                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                <i class="fas fa-user-plus me-1"></i><span id="submit-text">Register Clinic</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation and error handling
+    const form = document.getElementById('clinic-registration-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const submitText = document.getElementById('submit-text');
+    const spinner = submitBtn.querySelector('.spinner-border');
+    const alertContainer = document.getElementById('alert-container');
+
+    // Form fields
+    const fields = {
+        username: {
+            element: document.getElementById('{{ form.username.id_for_label }}'),
+            errorElement: document.getElementById('username-error'),
+            successElement: document.getElementById('username-success')
+        },
+        email: {
+            element: document.getElementById('{{ form.email.id_for_label }}'),
+            errorElement: document.getElementById('email-error'),
+            successElement: document.getElementById('email-success')
+        },
+        password: {
+            element: document.getElementById('{{ form.password.id_for_label }}'),
+            errorElement: document.getElementById('password-error'),
+            successElement: document.getElementById('password-success')
+        },
+        confirm_password: {
+            element: document.getElementById('{{ form.confirm_password.id_for_label }}'),
+            errorElement: document.getElementById('confirm-password-error'),
+            successElement: document.getElementById('confirm-password-success')
+        },
+        name: {
+            element: document.getElementById('{{ form.name.id_for_label }}'),
+            errorElement: document.getElementById('name-error'),
+            successElement: document.getElementById('name-success')
+        },
+        address: {
+            element: document.getElementById('{{ form.address.id_for_label }}'),
+            errorElement: document.getElementById('address-error'),
+            successElement: document.getElementById('address-success')
+        },
+        phone_number: {
+            element: document.getElementById('{{ form.phone_number.id_for_label }}'),
+            errorElement: document.getElementById('phone-number-error'),
+            successElement: document.getElementById('phone-number-success')
+        },
+        location: {
+            element: document.getElementById('{{ form.location.id_for_label }}'),
+            errorElement: document.getElementById('location-error'),
+            successElement: document.getElementById('location-success')
+        }
+    };
+
+    // Utility functions
+    function showAlert(message, type = 'danger') {
+        const alertClass = `alert alert-${type} alert-dismissible fade show`;
+        const alertHtml = `
+            <div class="${alertClass}" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+        alertContainer.innerHTML = alertHtml;
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            const alert = alertContainer.querySelector('.alert');
+            if (alert) {
+                alert.remove();
+            }
+        }, 5000);
+    }
+
+    function setFieldError(fieldName, message) {
+        const field = fields[fieldName];
+        if (field) {
+            field.element.classList.add('is-invalid');
+            field.element.classList.remove('is-valid');
+            field.errorElement.textContent = message;
+            field.successElement.textContent = '';
+        }
+    }
+
+    function setFieldSuccess(fieldName, message = '') {
+        const field = fields[fieldName];
+        if (field) {
+            field.element.classList.remove('is-invalid');
+            field.element.classList.add('is-valid');
+            field.errorElement.textContent = '';
+            field.successElement.textContent = message;
+        }
+    }
+
+    function clearFieldValidation(fieldName) {
+        const field = fields[fieldName];
+        if (field) {
+            field.element.classList.remove('is-invalid', 'is-valid');
+            field.errorElement.textContent = '';
+            field.successElement.textContent = '';
+        }
+    }
+
+    function setLoading(loading) {
+        if (loading) {
+            submitBtn.disabled = true;
+            spinner.classList.remove('d-none');
+            submitText.textContent = 'Registering...';
+        } else {
+            submitBtn.disabled = false;
+            spinner.classList.add('d-none');
+            submitText.textContent = 'Register Clinic';
+        }
+    }
+
+    // Validation functions
+    function validateUsername(username) {
+        if (!username) return 'Username is required.';
+        if (username.length < 3) return 'Username must be at least 3 characters long.';
+        if (!/^[a-zA-Z0-9_]+$/.test(username)) return 'Username can only contain letters, numbers, and underscores.';
+        return '';
+    }
+
+    function validateEmail(email) {
+        if (!email) return 'Email is required.';
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) return 'Please enter a valid email address.';
+        return '';
+    }
+
+    function validatePassword(password) {
+        if (!password) return 'Password is required.';
+        if (password.length < 8) return 'Password must be at least 8 characters long.';
+        if (!/[a-z]/.test(password)) return 'Password must contain at least one lowercase letter.';
+        if (!/[A-Z]/.test(password)) return 'Password must contain at least one uppercase letter.';
+        if (!/[0-9]/.test(password)) return 'Password must contain at least one number.';
+        if (!/[!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?]/.test(password)) return 'Password must contain at least one special character.';
+        return '';
+    }
+
+    function validateConfirmPassword(password, confirmPassword) {
+        if (!confirmPassword) return 'Please confirm your password.';
+        if (password !== confirmPassword) return 'Passwords do not match.';
+        return '';
+    }
+
+    function validateClinicName(name) {
+        if (!name) return 'Clinic name is required.';
+        if (name.trim().length < 2) return 'Clinic name must be at least 2 characters long.';
+        return '';
+    }
+
+    function validateAddress(address) {
+        if (!address) return 'Address is required.';
+        if (address.trim().length < 10) return 'Please provide a complete address (at least 10 characters).';
+        return '';
+    }
+
+    function validatePhoneNumber(phone) {
+        if (!phone) return 'Phone number is required.';
+        const cleanPhone = phone.replace(/[-\s()]/g, '');
+        if (!/^[\+]?[1-9][\d]{0,15}$/.test(cleanPhone)) return 'Please enter a valid phone number.';
+        return '';
+    }
+
+    function validateLocation(location) {
+        if (!location) return 'Location is required.';
+        if (location.trim().length < 2) return 'Location must be at least 2 characters long.';
+        return '';
+    }
+
+    function validateDiseases() {
+        if (selectedDiseases.size === 0) {
+            document.getElementById('diseases-error').textContent = 'Please select at least one disease that this clinic treats.';
+            return false;
+        }
+        document.getElementById('diseases-error').textContent = '';
+        return true;
+    }
+
+    // Real-time validation
+    Object.keys(fields).forEach(fieldName => {
+        const field = fields[fieldName];
+        field.element.addEventListener('blur', function() {
+            const value = this.value.trim();
+            let error = '';
+
+            switch(fieldName) {
+                case 'username':
+                    error = validateUsername(value);
+                    break;
+                case 'email':
+                    error = validateEmail(value);
+                    break;
+                case 'password':
+                    error = validatePassword(value);
+                    // Also validate confirm password if it's filled
+                    const confirmPass = fields.confirm_password.element.value;
+                    if (confirmPass) {
+                        const confirmError = validateConfirmPassword(value, confirmPass);
+                        if (confirmError) {
+                            setFieldError('confirm_password', confirmError);
+                        } else {
+                            setFieldSuccess('confirm_password', 'Passwords match!');
+                        }
+                    }
+                    break;
+                case 'confirm_password':
+                    const password = fields.password.element.value;
+                    error = validateConfirmPassword(password, value);
+                    break;
+                case 'name':
+                    error = validateClinicName(value);
+                    break;
+                case 'address':
+                    error = validateAddress(value);
+                    break;
+                case 'phone_number':
+                    error = validatePhoneNumber(value);
+                    break;
+                case 'location':
+                    error = validateLocation(value);
+                    break;
+            }
+
+            if (error) {
+                setFieldError(fieldName, error);
+            } else if (value) {
+                setFieldSuccess(fieldName, 'Looks good!');
+            } else {
+                clearFieldValidation(fieldName);
+            }
+        });
+
+        field.element.addEventListener('input', function() {
+            // Clear validation on input for better UX
+            if (field.element.classList.contains('is-invalid')) {
+                clearFieldValidation(fieldName);
+            }
+        });
+    });
+
+    // Form submission validation
+    form.addEventListener('submit', function(e) {
+        let hasErrors = false;
+        alertContainer.innerHTML = ''; // Clear any existing alerts
+
+        // Update hidden inputs for diseases before validation
+        updateHiddenInputs();
+
+        // Validate all fields
+        const validations = [
+            { field: 'username', validator: validateUsername },
+            { field: 'email', validator: validateEmail },
+            { field: 'password', validator: validatePassword },
+            { field: 'name', validator: validateClinicName },
+            { field: 'address', validator: validateAddress },
+            { field: 'phone_number', validator: validatePhoneNumber },
+            { field: 'location', validator: validateLocation }
+        ];
+
+        validations.forEach(({ field, validator }) => {
+            const value = fields[field].element.value.trim();
+            const error = validator(value);
+            if (error) {
+                setFieldError(field, error);
+                hasErrors = true;
+            }
+        });
+
+        // Validate confirm password
+        const password = fields.password.element.value;
+        const confirmPassword = fields.confirm_password.element.value;
+        const confirmError = validateConfirmPassword(password, confirmPassword);
+        if (confirmError) {
+            setFieldError('confirm_password', confirmError);
+            hasErrors = true;
+        }
+
+        // Validate diseases
+        if (!validateDiseases()) {
+            hasErrors = true;
+        }
+
+        if (hasErrors) {
+            e.preventDefault();
+            showAlert('Please correct the errors below before submitting.', 'danger');
+            // Scroll to first error
+            const firstError = document.querySelector('.is-invalid');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            return false;
+        }
+
+        // Show loading state
+        setLoading(true);
+        console.log('Form submitted with selected diseases:', Array.from(selectedDiseases));
+    });
+
+    // Disease Selection Functionality with Autocomplete
+    const diseaseInput = document.getElementById('disease-input');
+    const addDiseaseBtn = document.getElementById('add-disease-btn');
+    const selectedDiseasesTags = document.getElementById('selected-diseases-tags');
+    const autocompleteDropdown = document.getElementById('autocomplete-dropdown');
+    const autocompleteList = document.getElementById('autocomplete-list');
+    const hiddenInputsContainer = document.getElementById('hidden-disease-inputs');
+    
+    let selectedDiseases = new Set();
+    let availableDiseases = [];
+    let currentFocus = -1;
+
+    // Load available diseases
+    {% for disease in form.diseases_treated.field.queryset %}
+    availableDiseases.push({
+        id: '{{ disease.id }}',
+        name: '{{ disease.name }}'
+    });
+    {% endfor %}
+
+    // Initialize with any pre-selected values (for edit forms)
+    // For new registrations, this will be empty
+    updateHiddenInputs();
+
+    // Filter diseases based on input
+    function filterDiseases(query) {
+        if (!query) return [];
+        const filtered = availableDiseases.filter(disease => 
+            disease.name.toLowerCase().includes(query.toLowerCase()) &&
+            !selectedDiseases.has(disease.id)
+        );
+        return filtered.slice(0, 10); // Limit to 10 suggestions
+    }
+
+    // Show autocomplete dropdown
+    function showAutocomplete(items) {
+        autocompleteList.innerHTML = '';
+        if (items.length === 0) {
+            autocompleteDropdown.style.display = 'none';
+            return;
+        }
+
+        items.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'autocomplete-item';
+            div.textContent = item.name;
+            div.setAttribute('data-id', item.id);
+            div.setAttribute('data-name', item.name);
+            div.setAttribute('data-index', index);
+            autocompleteList.appendChild(div);
+        });
+
+        autocompleteDropdown.style.display = 'block';
+        currentFocus = -1;
+    }
+
+    // Hide autocomplete dropdown
+    function hideAutocomplete() {
+        autocompleteDropdown.style.display = 'none';
+        currentFocus = -1;
+    }
+
+    // Add disease function
+    function addDisease(diseaseName) {
+        // Find the disease from available diseases
+        const disease = availableDiseases.find(d => d.name === diseaseName);
+        if (!disease) {
+            showAlert('Please select a disease from the suggestions.', 'warning');
+            return;
+        }
+        
+        if (selectedDiseases.has(disease.id)) {
+            showAlert('This disease is already selected.', 'warning');
+            return;
+        }
+        
+        selectedDiseases.add(disease.id);
+        addDiseaseTag(disease.id, disease.name);
+        updateHiddenInputs();
+        diseaseInput.value = '';
+        hideAutocomplete();
+        diseaseInput.focus();
+    }
+
+    // Add disease tag to display
+    function addDiseaseTag(diseaseId, diseaseName) {
+        // Remove "No diseases selected" message
+        const noSelectionMsg = selectedDiseasesTags.querySelector('small');
+        if (noSelectionMsg) {
+            noSelectionMsg.remove();
+        }
+        
+        const tag = document.createElement('span');
+        tag.className = 'disease-tag';
+        tag.innerHTML = `${diseaseName} <span class="remove-tag" data-id="${diseaseId}">&times;</span>`;
+        selectedDiseasesTags.appendChild(tag);
+    }
+
+    // Remove disease tag
+    function removeDiseaseTag(diseaseId) {
+        selectedDiseases.delete(diseaseId);
+        updateHiddenInputs();
+        
+        // If no diseases selected, show message
+        if (selectedDiseases.size === 0) {
+            selectedDiseasesTags.innerHTML = '<small class="text-muted">No diseases selected</small>';
+        }
+    }
+
+    // Update hidden inputs for form submission
+    function updateHiddenInputs() {
+        if (!hiddenInputsContainer) return;
+        
+        // Clear existing inputs
+        hiddenInputsContainer.innerHTML = '';
+        
+        // Create hidden inputs for each selected disease
+        selectedDiseases.forEach(diseaseId => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'diseases_treated';
+            input.value = diseaseId;
+            hiddenInputsContainer.appendChild(input);
+        });
+    }
+
+    // Event listeners
+    addDiseaseBtn.addEventListener('click', function() {
+        const diseaseName = diseaseInput.value.trim();
+        if (diseaseName) {
+            addDisease(diseaseName);
+        }
+    });
+
+    diseaseInput.addEventListener('input', function() {
+        const query = this.value.trim();
+        if (query.length >= 1) {
+            const filtered = filterDiseases(query);
+            showAutocomplete(filtered);
+        } else {
+            hideAutocomplete();
+        }
+    });
+
+    diseaseInput.addEventListener('keydown', function(e) {
+        const items = autocompleteList.querySelectorAll('.autocomplete-item');
+        
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            currentFocus = currentFocus < items.length - 1 ? currentFocus + 1 : 0;
+            updateFocus();
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            currentFocus = currentFocus > 0 ? currentFocus - 1 : items.length - 1;
+            updateFocus();
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (currentFocus >= 0 && items[currentFocus]) {
+                const selectedItem = items[currentFocus];
+                addDisease(selectedItem.getAttribute('data-name'));
+            } else if (diseaseInput.value.trim()) {
+                addDisease(diseaseInput.value.trim());
+            }
+        } else if (e.key === 'Escape') {
+            hideAutocomplete();
+        }
+    });
+
+    function updateFocus() {
+        const items = autocompleteList.querySelectorAll('.autocomplete-item');
+        items.forEach(item => item.classList.remove('highlighted'));
+        if (currentFocus >= 0 && items[currentFocus]) {
+            items[currentFocus].classList.add('highlighted');
+            items[currentFocus].scrollIntoView({ block: 'nearest' });
+        }
+    }
+
+    // Autocomplete item selection
+    autocompleteList.addEventListener('click', function(e) {
+        if (e.target.classList.contains('autocomplete-item')) {
+            const diseaseName = e.target.getAttribute('data-name');
+            addDisease(diseaseName);
+        }
+    });
+
+    // Remove tag event delegation
+    selectedDiseasesTags.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-tag')) {
+            const diseaseId = e.target.getAttribute('data-id');
+            removeDiseaseTag(diseaseId);
+            e.target.closest('.disease-tag').remove();
+        }
+    });
+
+    // Hide dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!diseaseInput.contains(e.target) && !autocompleteDropdown.contains(e.target) && !addDiseaseBtn.contains(e.target)) {
+            hideAutocomplete();
+        }
+    });
+
+    // Update hidden inputs before form submission
+    // Geolocation functionality
+    const btn = document.getElementById('get-location-btn');
+    const addressEl = document.getElementById('{{ form.address.id_for_label }}');
+    const locationEl = document.getElementById('{{ form.location.id_for_label }}');
+
+    btn.addEventListener('click', function() {
+        if (navigator.geolocation) {
+            btn.textContent = 'Getting location...';
+            navigator.geolocation.getCurrentPosition(function(position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                // Reverse geocode
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Geocoding service unavailable');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data && data.display_name) {
+                            addressEl.value = data.display_name;
+                            // Try to extract city/town from address details
+                            let location = '';
+                            if (data.address) {
+                                location = data.address.city || data.address.town || data.address.village || data.address.state || data.address.country || '';
+                            }
+                            locationEl.value = location;
+                            btn.textContent = 'Use Current Location';
+                        } else {
+                            throw new Error('Unable to get address for this location');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Geocoding error:', error);
+                        showAlert('Error getting address: ' + error.message + '. Please enter your address manually.', 'danger');
+                        btn.textContent = 'Use Current Location';
+                    });
+            }, function(error) {
+                console.error('Geolocation error:', error);
+                let errorMessage = 'Location access denied.';
+                if (error.code === error.PERMISSION_DENIED) {
+                    errorMessage = 'Location access denied. Please allow location access and try again.';
+                } else if (error.code === error.POSITION_UNAVAILABLE) {
+                    errorMessage = 'Location information is unavailable.';
+                } else if (error.code === error.TIMEOUT) {
+                    errorMessage = 'Location request timed out.';
+                }
+                showAlert(errorMessage, 'warning');
+                btn.textContent = 'Use Current Location';
+            });
+        } else {
+            showAlert('Geolocation is not supported by this browser.', 'warning');
+        }
+    });
+});
+</script>
+{% endblock %}

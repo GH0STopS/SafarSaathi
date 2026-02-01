@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Nearby Clinics - Safar-Saathi{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <h2>Nearby Clinics</h2>
+            {% if not map_html %}
+            <p id="location-status">Getting your location...</p>
+            <button id="get-location-btn" class="btn btn-primary">Allow Location Access</button>
+            {% else %}
+            <p>Current Location: Real-time</p>
+            {% endif %}
+        </div>
+    </div>
+    {% if map_html %}
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div id="map" style="height: 400px;"></div>
+            {{ map_html|safe }}
+        </div>
+    </div>
+    {% if current_clinics %}
+    <h3>Your Registered Clinic</h3>
+    <div class="row">
+        {% for clinic in current_clinics %}
+        <div class="col-md-4 mb-4">
+            <div class="card border-success">
+                <div class="card-body">
+                    <h5 class="card-title">{{ clinic.name }} <span class="badge bg-success">Registered</span></h5>
+                    <p class="card-text">{{ clinic.address }}</p>
+                    <p class="card-text"><small class="text-muted">{{ clinic.location }} - {{ clinic.distance }} km</small></p>
+                    <a href="{% url 'patient:clinic_detail' clinic.id %}" class="btn btn-primary">View Details</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    <h3>Other Nearby Clinics</h3>
+    <div class="row">
+        {% for clinic in other_clinics %}
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ clinic.name }}</h5>
+                    <p class="card-text">{{ clinic.address }}</p>
+                    <p class="card-text"><small class="text-muted">{{ clinic.location }} - {{ clinic.distance }} km</small></p>
+                    <a href="{% url 'patient:clinic_detail' clinic.id %}" class="btn btn-primary">View Details</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <p>No other nearby clinics found.</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="row">
+        {% if current_clinics %}
+        <h3>Your Registered Clinic</h3>
+        {% for clinic in current_clinics %}
+        <div class="col-md-4 mb-4">
+            <div class="card border-success">
+                <div class="card-body">
+                    <h5 class="card-title">{{ clinic.name }} <span class="badge bg-success">Registered</span></h5>
+                    <p class="card-text">{{ clinic.address }}</p>
+                    <p class="card-text"><small class="text-muted">{{ clinic.location }}</small></p>
+                    <a href="{% url 'patient:clinic_detail' clinic.id %}" class="btn btn-primary">View Details</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+        <h3>Other Clinics</h3>
+        {% for clinic in other_clinics %}
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ clinic.name }}</h5>
+                    <p class="card-text">{{ clinic.address }}</p>
+                    <p class="card-text"><small class="text-muted">{{ clinic.location }}</small></p>
+                    <a href="{% url 'patient:clinic_detail' clinic.id %}" class="btn btn-primary">View Details</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <p>No clinics found.</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const statusEl = document.getElementById('location-status');
+    const btn = document.getElementById('get-location-btn');
+
+    if (btn) {
+        btn.addEventListener('click', function() {
+            if (navigator.geolocation) {
+                statusEl.textContent = 'Requesting location permission...';
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    // Redirect with lat lng
+                    window.location.href = `{% url 'patient:nearby_clinics' %}?lat=${lat}&lng=${lng}`;
+                }, function(error) {
+                    statusEl.textContent = 'Location access denied or unavailable.';
+                });
+            } else {
+                statusEl.textContent = 'Geolocation is not supported by this browser.';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

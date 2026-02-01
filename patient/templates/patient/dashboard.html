@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Safar-Saathi{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card" style="background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%); color: white;">
+            <div class="card-body text-center py-4">
+                <h2 class="mb-2"><i class="fas fa-user-circle me-2"></i>Welcome, {{ patient.user.get_full_name }}</h2>
+                <p class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Location: {{ patient.current_location }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header"
+                style="background: linear-gradient(90deg, #dc3545 0%, #b02a37 100%); color: white;">
+                <h5 class="mb-0"><i class="fas fa-notes-medical me-2"></i>Treatment Records</h5>
+            </div>
+            <div class="card-body">
+                {% for record in treatment_records %}
+                <div class="mb-3 p-3" style="background: #f8f9fa; border-radius: 10px;">
+                    <p class="mb-1"><strong>{{ record.record_date }}</strong></p>
+                    <p class="mb-0">{{ record.details }}</p>
+                </div>
+                {% empty %}
+                <p class="text-muted">No treatment records yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header"
+                style="background: linear-gradient(90deg, #dc3545 0%, #b02a37 100%); color: white;">
+                <h5 class="mb-0"><i class="fas fa-exchange-alt me-2"></i>Transfer Requests</h5>
+            </div>
+            <div class="card-body">
+                {% for request in transfer_requests %}
+                <div class="mb-3 p-3" style="background: #f8f9fa; border-radius: 10px;">
+                    <p class="mb-1"><strong>{{ request.from_clinic.name }} to {{ request.to_clinic.name }}</strong></p>
+                    <p class="mb-0">Status: <span
+                            class="badge bg-{% if request.status == 'Approved' %}success{% elif request.status == 'Pending' %}warning{% else %}danger{% endif %}">{{
+                            request.status }}</span></p>
+                </div>
+                {% empty %}
+                <p class="text-muted">No transfer requests.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Quick Actions Grid -->
+    <div class="row mt-4">
+        <div class="col-md-3 mb-3">
+            <a href="{% url 'patient:book_appointment' %}" class="btn btn-success w-100 h-100 d-flex flex-column align-items-center justify-content-center py-4"
+                style="border-radius: 15px; min-height: 120px;">
+                <i class="fas fa-calendar-plus fa-2x mb-2"></i>
+                <span class="fw-bold">Book Appointment</span>
+                <small class="text-success-emphasis">Schedule with clinic</small>
+            </a>
+        </div>
+        <div class="col-md-3 mb-3">
+            <a href="{% url 'patient:my_appointments' %}" class="btn btn-info w-100 h-100 d-flex flex-column align-items-center justify-content-center py-4"
+                style="border-radius: 15px; min-height: 120px;">
+                <i class="fas fa-calendar-check fa-2x mb-2"></i>
+                <span class="fw-bold">My Appointments</span>
+                <small class="text-info-emphasis">View & manage</small>
+            </a>
+        </div>
+        <div class="col-md-3 mb-3">
+            <a href="{% url 'patient:my_counselling_sessions' %}" class="btn btn-warning w-100 h-100 d-flex flex-column align-items-center justify-content-center py-4"
+                style="border-radius: 15px; min-height: 120px;">
+                <i class="fas fa-user-friends fa-2x mb-2"></i>
+                <span class="fw-bold">Counselling</span>
+                <small class="text-warning-emphasis">Support sessions</small>
+            </a>
+        </div>
+        <div class="col-md-3 mb-3">
+            <a href="{% url 'patient:emergency_trigger' %}" class="btn btn-danger w-100 h-100 d-flex flex-column align-items-center justify-content-center py-4"
+                style="border-radius: 15px; min-height: 120px;">
+                <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                <span class="fw-bold">Emergency</span>
+                <small class="text-danger-emphasis">Get immediate help</small>
+            </a>
+        </div>
+    </div>
+
+    <!-- Secondary Actions -->
+    <div class="row mt-3">
+        <div class="col-md-2 mb-3">
+            <a href="{% url 'patient:external_consultations' %}" class="btn btn-outline-primary w-100 d-flex flex-column align-items-center py-3"
+                style="border-radius: 15px;">
+                <i class="fas fa-globe fa-lg mb-1"></i>
+                <small class="fw-bold">External Consult</small>
+            </a>
+        </div>
+        <div class="col-md-2 mb-3">
+            <a href="{% url 'patient:telemedicine_sessions' %}" class="btn btn-outline-success w-100 d-flex flex-column align-items-center py-3"
+                style="border-radius: 15px;">
+                <i class="fas fa-video fa-lg mb-1"></i>
+                <small class="fw-bold">Telemedicine</small>
+            </a>
+        </div>
+        <div class="col-md-2 mb-3">
+            <a href="{% url 'patient:my_prescriptions' %}" class="btn btn-outline-info w-100 d-flex flex-column align-items-center py-3"
+                style="border-radius: 15px;">
+                <i class="fas fa-pills fa-lg mb-1"></i>
+                <small class="fw-bold">Prescriptions</small>
+            </a>
+        </div>
+        <div class="col-md-2 mb-3">
+            <a href="{% url 'patient:health_metrics' %}" class="btn btn-outline-warning w-100 d-flex flex-column align-items-center py-3"
+                style="border-radius: 15px;">
+                <i class="fas fa-chart-line fa-lg mb-1"></i>
+                <small class="fw-bold">Health Metrics</small>
+            </a>
+        </div>
+        <div class="col-md-2 mb-3">
+            <a href="{% url 'patient:transfer_request' %}" class="btn btn-primary w-100 d-flex flex-column align-items-center py-3"
+                style="border-radius: 15px;">
+                <i class="fas fa-paper-plane fa-lg mb-1"></i>
+                <small class="fw-bold">Transfer</small>
+            </a>
+        </div>
+        <div class="col-md-2 mb-3">
+            <a href="{% url 'patient:nearby_clinics' %}" class="btn btn-secondary w-100 d-flex flex-column align-items-center py-3"
+                style="border-radius: 15px;">
+                <i class="fas fa-search fa-lg mb-1"></i>
+                <small class="fw-bold">Nearby Clinics</small>
+            </a>
+        </div>
+    </div>
+{% endblock %}
