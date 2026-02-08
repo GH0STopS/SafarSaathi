@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'admin_app',
     'emergency',
     'mental_health',
+    'core',
 ]
 
 MIDDLEWARE = [
