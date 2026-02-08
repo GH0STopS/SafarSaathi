@@ -1,35 +1,20 @@
 {% extends 'base.html' %}
-
-{% block title %}Page Not Found - Safar-Saathi{% endblock %}
+{% block title %}404 - Page Not Found{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card border-danger">
-                <div class="card-header bg-danger text-white">
-                    <h3 class="card-title mb-0">
-                        <i class="fas fa-exclamation-triangle me-2"></i>Page Not Found (404)
-                    </h3>
-                </div>
-                <div class="card-body text-center">
-                    <div class="mb-4">
-                        <i class="fas fa-search fa-4x text-muted"></i>
-                    </div>
-                    <h4 class="card-title">Oops! Page Not Found</h4>
-                    <p class="card-text text-muted">{{ error_message }}</p>
-                    {% if path %}
-                        <p class="text-sm text-muted">Requested path: <code>{{ path }}</code></p>
-                    {% endif %}
-                    <div class="mt-4">
-                        <a href="{% url 'home' %}" class="btn btn-primary me-2">
-                            <i class="fas fa-home me-1"></i>Go Home
-                        </a>
-                        <button onclick="history.back()" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left me-1"></i>Go Back
-                        </button>
-                    </div>
-                </div>
+<div class="d-flex justify-content-center align-items-center" style="min-height:60vh">
+    <div class="col-md-6">
+        <div class="card text-center p-4">
+            <i class="fas fa-search fa-4x text-primary mb-3"></i>
+            <h3>404 – Page Not Found</h3>
+            <p class="text-muted">{{ error_message|default:"The page you requested does not exist." }}</p>
+            <div class="mt-3">
+                <a href="{% url 'home' %}" class="btn btn-primary me-2">
+                    Go Home
+                </a>
+                <button onclick="history.back()" class="btn btn-outline-secondary">
+                    Go Back
+                </button>
             </div>
         </div>
     </div>

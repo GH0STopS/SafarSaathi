@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% block title %}Medical Data Requests - Safar-Saathi{% endblock %}
+
+{% block content %}
+
+<div class="card">
+
+  <!-- Header -->
+  <div class="card-header py-2 d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">
+      <i class="fas fa-file-medical me-2"></i>
+      Medical Data Requests
+    </h5>
+    <a href="{% url 'clinic:clinic_dashboard' %}" class="btn btn-outline-secondary btn-sm">
+      <i class="fas fa-arrow-left me-1"></i>Back
+    </a>
+  </div>
+
+  <!-- Body -->
+  <div class="card-body">
+    <div class="row g-3">
+
+      <!-- RECEIVED REQUESTS -->
+      <div class="col-md-6">
+        <div class="border rounded p-2 h-100">
+
+          <h6 class="mb-2 text-muted">
+            <i class="fas fa-inbox me-1"></i>
+            Received Requests
+          </h6>
+
+          {% for request in received_requests %}
+          <div class="border rounded p-2 mb-2 bg-light">
+
+            <!-- Patient -->
+            <strong class="small">
+              {% firstof request.patient.user.get_full_name request.patient.user.username %}
+            </strong>
+
+            <!-- Meta -->
+            <div class="small text-muted mb-1">
+              {{ request.created_at|date:"M d, Y · H:i" }}
+            </div>
+
+            <div class="small">
+              <strong>Clinic:</strong> {{ request.requesting_clinic.name }}
+            </div>
+
+            <div class="small mb-1">
+              <strong>Purpose:</strong> {{ request.purpose }}
+            </div>
+
+            <!-- Status -->
+            <span class="badge bg-{% if request.status == 'approved' %}success
+              {% elif request.status == 'pending' %}warning
+              {% elif request.status == 'denied' %}danger
+              {% else %}secondary{% endif %}">
+              {{ request.status|title }}
+            </span>
+
+            <!-- Actions -->
+            {% if request.status == 'pending' %}
+            <div class="mt-2 d-flex gap-2">
+
+              <form method="post" action="{% url 'clinic:approve_data_request' request.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-success">
+                  <i class="fas fa-check me-1"></i>Approve
+                </button>
+              </form>
+
+              <form method="post" action="{% url 'clinic:deny_data_request' request.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-danger">
+                  <i class="fas fa-times me-1"></i>Deny
+                </button>
+              </form>
+
+            </div>
+            {% endif %}
+
+          </div>
+          {% empty %}
+          <p class="text-muted small mb-0">No received requests.</p>
+          {% endfor %}
+
+        </div>
+      </div>
+
+      <!-- SENT REQUESTS -->
+      <div class="col-md-6">
+        <div class="border rounded p-2 h-100">
+
+          <h6 class="mb-2 text-muted">
+            <i class="fas fa-paper-plane me-1"></i>
+            Sent Requests
+          </h6>
+
+          {% for request in sent_requests %}
+          <div class="border rounded p-2 mb-2 bg-light">
+
+            <strong class="small">
+              {% firstof request.patient.user.get_full_name request.patient.user.username %}
+            </strong>
+
+            <div class="small text-muted mb-1">
+              {{ request.created_at|date:"M d, Y · H:i" }}
+            </div>
+
+            <div class="small">
+              <strong>Parent Clinic:</strong> {{ request.parent_clinic.name }}
+            </div>
+
+            <div class="small mb-1">
+              <strong>Purpose:</strong> {{ request.purpose }}
+            </div>
+
+            <span class="badge bg-{% if request.status == 'approved' %}success
+              {% elif request.status == 'pending' %}warning
+              {% elif request.status == 'denied' %}danger
+              {% else %}secondary{% endif %}">
+              {{ request.status|title }}
+            </span>
+
+          </div>
+          {% empty %}
+          <p class="text-muted small mb-0">No sent requests.</p>
+          {% endfor %}
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}

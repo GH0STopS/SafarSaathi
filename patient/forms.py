@@ -90,6 +90,14 @@ class PatientRegistrationForm(forms.ModelForm):
             'placeholder': 'Full address'
         })
     )
+    current_clinic = forms.ModelChoiceField(
+        queryset=ClinicProfile.objects.filter(is_approved=True),
+        required=True,
+        empty_label="Select your treatment clinic",
+        widget=forms.Select(attrs={
+            'class': 'form-select'
+        })
+    )
     current_location = forms.CharField(
         max_length=100,
         widget=forms.TextInput(attrs={
@@ -217,7 +225,26 @@ class AppointmentBookingForm(forms.ModelForm):
             'type': 'datetime-local'
         })
     )
-    reason = forms.CharField(
+    consultation_mode = forms.ChoiceField(
+        choices=[
+            ('in_person', 'In Person'),
+            ('online', 'Online/Video Call'),
+            ('phone', 'Phone Call'),
+        ],
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        initial='in_person'
+    )
+    appointment_type = forms.ChoiceField(
+        choices=[
+            ('general', 'General Consultation'),
+            ('follow_up', 'Follow-up'),
+            ('emergency', 'Emergency'),
+            ('regular_checkup', 'Regular Checkup'),
+        ],
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        initial='general'
+    )
+    notes = forms.CharField(
         max_length=200,
         widget=forms.Textarea(attrs={
             'class': 'form-control',
@@ -228,7 +255,7 @@ class AppointmentBookingForm(forms.ModelForm):
 
     class Meta:
         model = Appointment
-        fields = ['appointment_date', 'reason']
+        fields = ['appointment_date', 'appointment_type', 'consultation_mode', 'notes']
 
     def clean_appointment_date(self):
         appointment_date = self.cleaned_data['appointment_date']

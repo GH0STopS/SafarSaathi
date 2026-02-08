@@ -1,51 +1,69 @@
-{% extends 'base.html' %}
+{% extends 'admin_base.html' %}
 
 {% block title %}Edit Patient - Safar-Saathi{% endblock %}
+{% block page_title %}Edit Patient{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-12">
-            <h2><i class="fas fa-user-edit me-2"></i>Edit Patient</h2>
-            <a href="{% url 'admin_app:user_management' %}" class="btn btn-secondary mb-3"><i class="fas fa-arrow-left me-2"></i>Back to User Management</a>
-        </div>
-    </div>
 
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5>Patient Details</h5>
-                </div>
-                <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Username</label>
-                            <input type="text" class="form-control" id="username" value="{{ patient.user.username }}" readonly>
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="fas fa-user-edit text-primary me-2"></i>Patient Details
+                </h6>
+                <a href="{% url 'admin_app:patient_management' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Back
+                </a>
+            </div>
+            <div class="card-body p-3">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <label for="username" class="form-label small mb-1">Username</label>
+                            <input type="text" class="form-control form-control-sm" id="username" value="{{ patient.user.username }}" readonly>
+                            <small class="text-muted">Cannot be changed</small>
                         </div>
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" value="{{ patient.user.email }}" readonly>
+                        <div class="col-md-6 mb-2">
+                            <label for="email" class="form-label small mb-1">Email</label>
+                            <input type="email" class="form-control form-control-sm" id="email" value="{{ patient.user.email }}" readonly>
+                            <small class="text-muted">Cannot be changed</small>
                         </div>
-                        <div class="mb-3">
-                            <label for="disease" class="form-label">Disease</label>
-                            <input type="text" class="form-control" id="disease" name="disease" value="{{ patient.disease }}" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <label for="first_name" class="form-label small mb-1">First Name</label>
+                            <input type="text" class="form-control form-control-sm" id="first_name" name="first_name" value="{{ patient.user.first_name }}">
                         </div>
-                        <div class="mb-3">
-                            <label for="current_clinic" class="form-label">Current Clinic</label>
-                            <select class="form-control" id="current_clinic" name="current_clinic">
-                                <option value="">None</option>
-                                {% for clinic in clinics %}
-                                <option value="{{ clinic.id }}" {% if patient.current_clinic and patient.current_clinic.id == clinic.id %}selected{% endif %}>{{ clinic.name }}</option>
-                                {% endfor %}
-                            </select>
+                        <div class="col-md-6 mb-2">
+                            <label for="last_name" class="form-label small mb-1">Last Name</label>
+                            <input type="text" class="form-control form-control-sm" id="last_name" name="last_name" value="{{ patient.user.last_name }}">
                         </div>
-                        <button type="submit" class="btn btn-primary">Update Patient</button>
-                    </form>
-                </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="current_clinic" class="form-label small mb-1">Current Clinic</label>
+                        <select class="form-select form-select-sm" id="current_clinic" name="current_clinic">
+                            <option value="">None</option>
+                            {% for clinic in clinics %}
+                            <option value="{{ clinic.id }}" {% if patient.current_clinic and patient.current_clinic.id == clinic.id %}selected{% endif %}>
+                                {{ clinic.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="fas fa-save me-1"></i>Update Patient
+                        </button>
+                        <a href="{% url 'admin_app:patient_management' %}" class="btn btn-outline-secondary btn-sm">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
+
 {% endblock %}

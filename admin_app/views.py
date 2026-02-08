@@ -1,16 +1,24 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.core.exceptions import ValidationError
-from django.db import IntegrityError, transaction
-from django.http import Http404
-from .models import AuditLog
-from clinic.models import ClinicProfile, Disease
-from patient.models import PatientProfile
-from emergency.models import EmergencyAccess
-from django.contrib import messages
-from django.utils import timezone
-from safar_saathi.utils import is_admin
 import logging
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.core.paginator import Paginator
+from django.db import IntegrityError, transaction
+from django.db.models import Q
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+
+# Models
+from admin_app.models import AuditLog
+from clinic.models import ClinicProfile, Disease
+from emergency.models import EmergencyAccess
+from patient.models import (
+    MedicationIntake, PatientProfile, Appointment, CounsellingSession, 
+    Prescription, MedicationReminder, TelemedicineSession,
+    HealthMetric, Notification
+)
+
+# Utils
+from safar_saathi.utils import is_admin
 
 logger = logging.getLogger(__name__)
 
@@ -19,27 +27,117 @@ logger = logging.getLogger(__name__)
 @user_passes_test(is_admin)
 def admin_dashboard(request):
     try:
-        clinics = ClinicProfile.objects.all()
-        audit_logs = AuditLog.objects.all()[:10]  # Last 10 logs
-        total_users = PatientProfile.objects.count() + ClinicProfile.objects.count()
+        # Basic counts
+        total_patients = PatientProfile.objects.count()
+        total_clinics = ClinicProfile.objects.count()
+        total_users = total_patients + total_clinics
         total_emergencies = EmergencyAccess.objects.count()
+        
+        # Clinic status
         approved_clinics = ClinicProfile.objects.filter(is_approved=True).count()
         pending_clinics = ClinicProfile.objects.filter(is_approved=False).count()
-        active_patients = PatientProfile.objects.filter(is_active=True).count()
-        inactive_patients = PatientProfile.objects.filter(is_active=False).count()
         active_clinics = ClinicProfile.objects.filter(is_active=True).count()
         inactive_clinics = ClinicProfile.objects.filter(is_active=False).count()
+        
+        # Patient status
+        active_patients = PatientProfile.objects.filter(is_active=True).count()
+        inactive_patients = PatientProfile.objects.filter(is_active=False).count()
+        
+        # Healthcare metrics
+        total_appointments = Appointment.objects.count()
+        upcoming_appointments = Appointment.objects.filter(
+            appointment_date__gte=timezone.now(),
+            status__in=['scheduled', 'confirmed']
+        ).count()
+        completed_appointments = Appointment.objects.filter(status='completed').count()
+        
+        total_counselling_sessions = CounsellingSession.objects.count()
+        active_counselling_sessions = CounsellingSession.objects.filter(
+            status__in=['scheduled', 'in_progress']
+        ).count()
+        
+        total_prescriptions = Prescription.objects.count()
+        active_prescriptions = Prescription.objects.filter(is_active=True).count()
+        
+        total_telemedicine_sessions = TelemedicineSession.objects.count()
+        completed_telemedicine_sessions = TelemedicineSession.objects.filter(status='completed').count()
+        
+        # Health metrics
+        total_health_metrics = HealthMetric.objects.count()
+        recent_health_metrics = HealthMetric.objects.filter(
+            recorded_at__gte=timezone.now() - timezone.timedelta(days=30)
+        ).count()
+        
+        # Medication adherence (last 30 days)
+        thirty_days_ago = timezone.now() - timezone.timedelta(days=30)
+        medication_logs = MedicationIntake.objects.filter(intake_date__gte=thirty_days_ago)
+        total_doses = medication_logs.count()
+        taken_doses = medication_logs.filter(has_taken=True).count()
+        adherence_rate = (taken_doses / total_doses * 100) if total_doses > 0 else 0
+        
+        # Notifications
+        total_notifications = Notification.objects.count()
+        unread_notifications = Notification.objects.filter(is_read=False).count()
+        
+        # Diseases
+        total_diseases = Disease.objects.count()
+        
+        # Recent activity
+        clinics = ClinicProfile.objects.all()[:5]  # Recent clinics
+        audit_logs = AuditLog.objects.all()[:10]  # Last 10 logs
+        
+        # System health indicators
+        recent_emergencies = EmergencyAccess.objects.filter(
+            created_at__gte=timezone.now() - timezone.timedelta(days=7)
+        ).count()
+        
         context = {
-            'clinics': clinics,
-            'audit_logs': audit_logs,
+            # Basic counts
             'total_users': total_users,
+            'total_patients': total_patients,
+            'total_clinics': total_clinics,
             'total_emergencies': total_emergencies,
+            
+            # Clinic metrics
             'approved_clinics': approved_clinics,
             'pending_clinics': pending_clinics,
-            'active_patients': active_patients,
-            'inactive_patients': inactive_patients,
             'active_clinics': active_clinics,
             'inactive_clinics': inactive_clinics,
+            
+            # Patient metrics
+            'active_patients': active_patients,
+            'inactive_patients': inactive_patients,
+            
+            # Healthcare services
+            'total_appointments': total_appointments,
+            'upcoming_appointments': upcoming_appointments,
+            'completed_appointments': completed_appointments,
+            
+            'total_counselling_sessions': total_counselling_sessions,
+            'active_counselling_sessions': active_counselling_sessions,
+            
+            'total_prescriptions': total_prescriptions,
+            'active_prescriptions': active_prescriptions,
+            
+            'total_telemedicine_sessions': total_telemedicine_sessions,
+            'completed_telemedicine_sessions': completed_telemedicine_sessions,
+            
+            # Health monitoring
+            'total_health_metrics': total_health_metrics,
+            'recent_health_metrics': recent_health_metrics,
+            'adherence_rate': round(adherence_rate, 1),
+            
+            # Communication
+            'total_notifications': total_notifications,
+            'unread_notifications': unread_notifications,
+            
+            # System data
+            'total_diseases': total_diseases,
+            'recent_emergencies': recent_emergencies,
+            
+            # Lists
+            'clinics': clinics,
+            'audit_logs': audit_logs,
             'current_time': timezone.now(),
         }
         return render(request, 'admin_app/dashboard.html', context)
@@ -114,19 +212,114 @@ def reject_clinic(request, clinic_id):
         messages.error(request, 'An unexpected error occurred. Please try again.')
 
     return redirect('admin_app:admin_dashboard')
-    return redirect('admin_app:admin_dashboard')
 
 
 @login_required
 @user_passes_test(is_admin)
-def user_management(request):
-    patients = PatientProfile.objects.all()
-    clinics = ClinicProfile.objects.all()
+def clinic_management(request):
+    # Get filter parameters
+    approval_filter = request.GET.get('approval_status', '')
+    active_filter = request.GET.get('active_status', '')
+    location_filter = request.GET.get('location', '')
+    search_query = request.GET.get('search', '')
+
+    # Base queryset
+    clinics = ClinicProfile.objects.select_related('user').prefetch_related('diseases_treated')
+
+    # Apply filters
+    if approval_filter:
+        if approval_filter == 'approved':
+            clinics = clinics.filter(is_approved=True)
+        elif approval_filter == 'pending':
+            clinics = clinics.filter(is_approved=False)
+
+    if active_filter:
+        if active_filter == 'active':
+            clinics = clinics.filter(is_active=True)
+        elif active_filter == 'inactive':
+            clinics = clinics.filter(is_active=False)
+
+    if location_filter:
+        clinics = clinics.filter(location__icontains=location_filter)
+
+    if search_query:
+        clinics = clinics.filter(
+            Q(name__icontains=search_query) |
+            Q(user__username__icontains=search_query) |
+            Q(user__email__icontains=search_query) |
+            Q(address__icontains=search_query)
+        )
+
+    # Pagination
+    paginator = Paginator(clinics, 10)  # Show 10 clinics per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     context = {
-        'patients': patients,
-        'clinics': clinics,
+        'page_obj': page_obj,
+        'clinics': page_obj,
+        'approval_filter': approval_filter,
+        'active_filter': active_filter,
+        'location_filter': location_filter,
+        'search_query': search_query,
+        'total_clinics': clinics.count(),
     }
-    return render(request, 'admin_app/user_management.html', context)
+    return render(request, 'admin_app/clinic_management.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def patient_management(request):
+    # Get filter parameters
+    clinic_filter = request.GET.get('clinic', '')
+    active_filter = request.GET.get('active_status', '')
+    location_filter = request.GET.get('location', '')
+    search_query = request.GET.get('search', '')
+
+    # Base queryset
+    patients = PatientProfile.objects.select_related('user', 'current_clinic')
+
+    # Apply filters
+    if clinic_filter:
+        patients = patients.filter(current_clinic_id=clinic_filter)
+
+    if active_filter:
+        if active_filter == 'active':
+            patients = patients.filter(is_active=True)
+        elif active_filter == 'inactive':
+            patients = patients.filter(is_active=False)
+
+    if location_filter:
+        patients = patients.filter(current_location__icontains=location_filter)
+
+    if search_query:
+        patients = patients.filter(
+            Q(user__username__icontains=search_query) |
+            Q(user__first_name__icontains=search_query) |
+            Q(user__last_name__icontains=search_query) |
+            Q(user__email__icontains=search_query) |
+            Q(phone_number__icontains=search_query)
+        )
+
+    # Pagination
+    paginator = Paginator(patients, 10)  # Show 10 patients per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Get all approved clinics for filter dropdown
+    approved_clinics = ClinicProfile.objects.filter(is_approved=True)
+
+    context = {
+        'page_obj': page_obj,
+        'patients': page_obj,
+        'clinic_filter': clinic_filter,
+        'active_filter': active_filter,
+        'location_filter': location_filter,
+        'search_query': search_query,
+        'approved_clinics': approved_clinics,
+        'total_patients': patients.count(),
+    }
+    return render(request, 'admin_app/patient_management.html', context)
 
 
 @login_required
@@ -173,7 +366,7 @@ def edit_patient(request, patient_id):
         patient.save()
         AuditLog.objects.create(user=request.user, action='update', details=f'Updated patient {patient.user.username}')
         messages.success(request, f'Patient {patient.user.username} updated.')
-        return redirect('admin_app:user_management')
+        return redirect('admin_app:patient_management')
     clinics = ClinicProfile.objects.filter(is_approved=True)
     context = {
         'patient': patient,
@@ -193,7 +386,7 @@ def edit_clinic(request, clinic_id):
         clinic.save()
         AuditLog.objects.create(user=request.user, action='update', details=f'Updated clinic {clinic.name}')
         messages.success(request, f'Clinic {clinic.name} updated.')
-        return redirect('admin_app:user_management')
+        return redirect('admin_app:clinic_management')
     context = {
         'clinic': clinic,
     }
@@ -222,7 +415,7 @@ def deactivate_patient(request, patient_id):
 
             logger.info(f"Patient deactivated: {patient.user.username} by {request.user.username}")
             messages.success(request, f'Patient {patient.user.username} deactivated successfully.')
-            return redirect('admin_app:user_management')
+            return redirect('admin_app:patient_management')
 
     except IntegrityError as e:
         logger.error(f"Database integrity error deactivating patient {patient_id}: {str(e)}")
@@ -231,7 +424,7 @@ def deactivate_patient(request, patient_id):
         logger.error(f"Unexpected error deactivating patient {patient_id}: {str(e)}", exc_info=True)
         messages.error(request, 'An unexpected error occurred. Please try again.')
 
-    return redirect('admin_app:user_management')
+    return redirect('admin_app:patient_management')
 
 
 @login_required
@@ -256,7 +449,7 @@ def activate_patient(request, patient_id):
 
             logger.info(f"Patient activated: {patient.user.username} by {request.user.username}")
             messages.success(request, f'Patient {patient.user.username} activated successfully.')
-            return redirect('admin_app:user_management')
+            return redirect('admin_app:patient_management')
 
     except IntegrityError as e:
         logger.error(f"Database integrity error activating patient {patient_id}: {str(e)}")
@@ -265,7 +458,7 @@ def activate_patient(request, patient_id):
         logger.error(f"Unexpected error activating patient {patient_id}: {str(e)}", exc_info=True)
         messages.error(request, 'An unexpected error occurred. Please try again.')
 
-    return redirect('admin_app:user_management')
+    return redirect('admin_app:patient_management')
 
 
 @login_required
@@ -290,7 +483,7 @@ def deactivate_clinic(request, clinic_id):
 
             logger.info(f"Clinic deactivated: {clinic.name} by {request.user.username}")
             messages.success(request, f'Clinic {clinic.name} deactivated successfully.')
-            return redirect('admin_app:user_management')
+            return redirect('admin_app:clinic_management')
 
     except IntegrityError as e:
         logger.error(f"Database integrity error deactivating clinic {clinic_id}: {str(e)}")
@@ -299,7 +492,7 @@ def deactivate_clinic(request, clinic_id):
         logger.error(f"Unexpected error deactivating clinic {clinic_id}: {str(e)}", exc_info=True)
         messages.error(request, 'An unexpected error occurred. Please try again.')
 
-    return redirect('admin_app:user_management')
+    return redirect('admin_app:clinic_management')
 
 
 @login_required
@@ -324,7 +517,7 @@ def activate_clinic(request, clinic_id):
 
             logger.info(f"Clinic activated: {clinic.name} by {request.user.username}")
             messages.success(request, f'Clinic {clinic.name} activated successfully.')
-            return redirect('admin_app:user_management')
+            return redirect('admin_app:clinic_management')
 
     except IntegrityError as e:
         logger.error(f"Database integrity error activating clinic {clinic_id}: {str(e)}")
@@ -332,7 +525,7 @@ def activate_clinic(request, clinic_id):
         logger.error(f"Unexpected error activating clinic {clinic_id}: {str(e)}", exc_info=True)
         messages.error(request, 'An unexpected error occurred. Please try again.')
 
-    return redirect('admin_app:user_management')
+    return redirect('admin_app:clinic_management')
 
 
 @login_required
@@ -385,6 +578,7 @@ def add_disease(request):
 @login_required
 @user_passes_test(is_admin)
 def edit_disease(request, disease_id):
+    logger.info(f"Editing disease with ID: {disease_id}")
     disease = get_object_or_404(Disease, id=disease_id)
     
     if request.method == 'POST':

@@ -1,101 +1,172 @@
 {% extends 'base.html' %}
-
 {% block title %}Nearby Clinics - Safar-Saathi{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-12">
-            <h2>Nearby Clinics</h2>
-            {% if not map_html %}
-            <p id="location-status">Getting your location...</p>
-            <button id="get-location-btn" class="btn btn-primary">Allow Location Access</button>
-            {% else %}
-            <p>Current Location: Real-time</p>
-            {% endif %}
+
+<style>
+    .card-soft {
+        background: #f8fafc;
+    }
+    .card-soft-green {
+        background: #f8fdf9;
+        border-left: 4px solid #198754;
+    }
+    .clinic-card p {
+        margin-bottom: .35rem;
+    }
+    .clinic-card .badge {
+        font-weight: 500;
+    }
+
+    /* NEW */
+    .clinic-scroll {
+        max-height: 520px;
+        overflow-y: auto;
+        padding-right: 4px;
+    }
+
+    .leaflet-container {
+        height: 520px !important;
+        border-radius: 6px;
+    }
+
+    @media (max-width: 768px) {
+        .leaflet-container {
+            height: 300px !important;
+        }
+        .clinic-scroll {
+            max-height: none;
+        }
+    }
+</style>
+
+
+<!-- Header -->
+<div class="card card-soft mb-3">
+    <div class="card-body py-3 d-flex justify-content-between align-items-center">
+        <div>
+            <h4 class="mb-1">
+                <i class="fas fa-search-location me-2 text-primary"></i>
+                Nearby Clinics
+            </h4>
+            <small class="text-muted">
+                Find clinics around your current location
+            </small>
         </div>
-    </div>
-    {% if map_html %}
-    <div class="row">
-        <div class="col-12 mb-4">
-            <div id="map" style="height: 400px;"></div>
-            {{ map_html|safe }}
-        </div>
-    </div>
-    {% if current_clinics %}
-    <h3>Your Registered Clinic</h3>
-    <div class="row">
-        {% for clinic in current_clinics %}
-        <div class="col-md-4 mb-4">
-            <div class="card border-success">
-                <div class="card-body">
-                    <h5 class="card-title">{{ clinic.name }} <span class="badge bg-success">Registered</span></h5>
-                    <p class="card-text">{{ clinic.address }}</p>
-                    <p class="card-text"><small class="text-muted">{{ clinic.location }} - {{ clinic.distance }} km</small></p>
-                    <a href="{% url 'patient:clinic_detail' clinic.id %}" class="btn btn-primary">View Details</a>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-    <h3>Other Nearby Clinics</h3>
-    <div class="row">
-        {% for clinic in other_clinics %}
-        <div class="col-md-4 mb-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">{{ clinic.name }}</h5>
-                    <p class="card-text">{{ clinic.address }}</p>
-                    <p class="card-text"><small class="text-muted">{{ clinic.location }} - {{ clinic.distance }} km</small></p>
-                    <a href="{% url 'patient:clinic_detail' clinic.id %}" class="btn btn-primary">View Details</a>
-                </div>
-            </div>
-        </div>
-        {% empty %}
-        <div class="col-12">
-            <p>No other nearby clinics found.</p>
-        </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <div class="row">
-        {% if current_clinics %}
-        <h3>Your Registered Clinic</h3>
-        {% for clinic in current_clinics %}
-        <div class="col-md-4 mb-4">
-            <div class="card border-success">
-                <div class="card-body">
-                    <h5 class="card-title">{{ clinic.name }} <span class="badge bg-success">Registered</span></h5>
-                    <p class="card-text">{{ clinic.address }}</p>
-                    <p class="card-text"><small class="text-muted">{{ clinic.location }}</small></p>
-                    <a href="{% url 'patient:clinic_detail' clinic.id %}" class="btn btn-primary">View Details</a>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
+
+        {% if not map_html %}
+            <button id="get-location-btn" class="btn btn-primary btn-sm">
+                <i class="fas fa-location-arrow me-1"></i>
+                Allow Location
+            </button>
         {% endif %}
-        <h3>Other Clinics</h3>
-        {% for clinic in other_clinics %}
-        <div class="col-md-4 mb-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">{{ clinic.name }}</h5>
-                    <p class="card-text">{{ clinic.address }}</p>
-                    <p class="card-text"><small class="text-muted">{{ clinic.location }}</small></p>
-                    <a href="{% url 'patient:clinic_detail' clinic.id %}" class="btn btn-primary">View Details</a>
-                </div>
+    </div>
+</div>
+
+{% if not map_html %}
+    <p id="location-status" class="text-muted small">
+        Getting your location…
+    </p>
+{% endif %}
+
+{% if map_html %}
+<div class="row g-3 mb-3">
+
+    <!-- MAP -->
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-body p-0">
+                {{ map_html|safe }}
             </div>
         </div>
-        {% empty %}
-        <div class="col-12">
-            <p>No clinics found.</p>
-        </div>
-        {% endfor %}
     </div>
-    {% endif %}
+
+    <!-- CLINICS LIST -->
+    <div class="col-lg-4">
+        <div class="card card-soft h-100">
+            <div class="card-body py-3 clinic-scroll">
+
+                {% if current_clinics %}
+                <h6 class="text-muted mb-2">Your Registered Clinic</h6>
+                {% for clinic in current_clinics %}
+                <div class="card card-soft-green clinic-card mb-2">
+                    <div class="card-body py-2">
+                        <h6 class="mb-1">
+                            {{ clinic.name }}
+                            <span class="badge bg-success ms-1">Registered</span>
+                        </h6>
+                        <p class="small text-muted">{{ clinic.address }}</p>
+
+                        {% if clinic.diseases_treated.all %}
+                            <p class="small mb-1">
+                                {% for disease in clinic.diseases_treated.all %}
+                                    <span class="badge bg-info">{{ disease.name }}</span>
+                                {% endfor %}
+                            </p>
+                        {% endif %}
+
+                        <small class="text-muted">
+                            {{ clinic.location }}
+                            {% if clinic.distance %} • {{ clinic.distance }} km{% endif %}
+                        </small>
+
+                        <div class="mt-2">
+                            <a href="{% url 'patient:clinic_detail' clinic.id %}"
+                               class="btn btn-sm btn-outline-success">
+                                View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                <hr class="my-2">
+                {% endif %}
+
+                <h6 class="text-muted mb-2">Other Nearby Clinics</h6>
+
+                {% for clinic in other_clinics %}
+                <div class="card card-soft clinic-card mb-2">
+                    <div class="card-body py-2">
+                        <h6 class="mb-1">{{ clinic.name }}</h6>
+                        <p class="small text-muted">{{ clinic.address }}</p>
+
+                        {% if clinic.diseases_treated.all %}
+                            <p class="small mb-1">
+                                {% for disease in clinic.diseases_treated.all %}
+                                    <span class="badge bg-info">{{ disease.name }}</span>
+                                {% endfor %}
+                            </p>
+                        {% endif %}
+
+                        <small class="text-muted">
+                            {{ clinic.location }}
+                            {% if clinic.distance %} • {{ clinic.distance }} km{% endif %}
+                        </small>
+
+                        <div class="mt-2">
+                            <a href="{% url 'patient:clinic_detail' clinic.id %}"
+                               class="btn btn-sm btn-outline-primary">
+                                View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                    <p class="text-muted small mb-0">No nearby clinics found.</p>
+                {% endfor %}
+
+            </div>
+        </div>
+    </div>
+
 </div>
+{% endif %}
+
+
+
+
 {% endblock %}
+
 
 {% block extra_js %}
 <script>

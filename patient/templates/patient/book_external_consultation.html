@@ -1,92 +1,107 @@
 {% extends 'base.html' %}
-
-{% block title %}Book External Consultation - Safar-Saathi{% endblock %}
+{% block title %}Book External Consultation{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-12">
-            <h2><i class="fas fa-globe me-2"></i>Book External Consultation</h2>
-            <a href="{% url 'patient:external_consultations' %}" class="btn btn-secondary mb-3"><i class="fas fa-arrow-left me-2"></i>Back to Consultations</a>
+<div class="container py-3">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="fas fa-globe me-2"></i>External Consultation</h4>
+    <a href="{% url 'patient:external_consultations' %}" class="btn btn-outline-secondary btn-sm">
+      <i class="fas fa-arrow-left"></i>
+    </a>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-body p-3">
+          <form method="post">
+            {% csrf_token %}
+
+            <div class="mb-2">
+              <label class="form-label">Clinic</label>
+              <select class="form-select" name="clinic_id" required>
+                <option value="">Select clinic</option>
+                {% for clinic in disease_clinics %}
+                  <option value="{{ clinic.id }}">{{ clinic.name }} - {{ clinic.location }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label">Preferred Date & Time</label>
+              <input type="datetime-local" class="form-control" name="consultation_date" required>
+            </div>
+
+            <input type="hidden" name="current_location" id="current_location">
+
+
+            <div class="mb-2">
+              <label class="form-label">Consultation Type</label>
+              <select class="form-select" name="consultation_type" required>
+                <option value="specialist_consultation">Specialist</option>
+                <option value="emergency_care">Emergency</option>
+                <option value="follow_up">Follow-up</option>
+              </select>
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label">Reason</label>
+              <textarea class="form-control" rows="2" name="reason" required></textarea>
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label">Stay Type</label>
+              <select class="form-select" name="stay_type" required>
+                <option value="temporary">Temporary</option>
+                <option value="permanent">Permanent</option>
+              </select>
+            </div>
+
+            <button class="btn btn-primary w-100 mt-2">Submit Request</button>
+          </form>
         </div>
+      </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h5>Request Consultation at Specialized Clinic</h5>
-                </div>
-                <div class="card-body">
-                    <div class="alert alert-info">
-                        <strong>Note:</strong> This will allow the selected clinic to request your medical data from your current clinic for consultation purposes.
-                    </div>
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="clinic_id" class="form-label">Select Specialized Clinic</label>
-                            <select class="form-control" id="clinic_id" name="clinic_id" required>
-                                <option value="">Choose a clinic...</option>
-                                {% for clinic in disease_clinics %}
-                                <option value="{{ clinic.id }}">{{ clinic.name }} - {{ clinic.location }}</option>
-                                {% endfor %}
-                            </select>
-                            <small class="form-text text-muted">Only clinics specializing in {{ patient.disease }} are shown.</small>
-                        </div>
-                        <div class="mb-3">
-                            <label for="consultation_date" class="form-label">Preferred Consultation Date & Time</label>
-                            <input type="datetime-local" class="form-control" id="consultation_date" name="consultation_date" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="consultation_type" class="form-label">Consultation Type</label>
-                            <select class="form-control" id="consultation_type" name="consultation_type" required>
-                                <option value="specialist_consultation">Specialist Consultation</option>
-                                <option value="emergency_care">Emergency Care</option>
-                                <option value="follow_up">Follow-up Care</option>
-                                <option value="diagnostic_services">Diagnostic Services</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="reason" class="form-label">Reason for Consultation</label>
-                            <textarea class="form-control" id="reason" name="reason" rows="3" required placeholder="Please explain why you need this consultation..."></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label for="current_location" class="form-label">Your Current Location</label>
-                            <input type="text" class="form-control" id="current_location" name="current_location" required placeholder="City, State">
-                        </div>
-                        <div class="mb-3">
-                            <label for="stay_type" class="form-label">Type of Stay</label>
-                            <select class="form-control" id="stay_type" name="stay_type" required>
-                                <option value="temporary">Temporary Stay (One-time access to medical data)</option>
-                                <option value="permanent">Permanent Stay (Full access to medical data)</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Submit Consultation Request</button>
-                    </form>
-                </div>
-            </div>
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-body p-3">
+          <h6>Data Access</h6>
+          <small class="text-muted">
+            Temporary = limited access<br>
+            Permanent = full access
+          </small>
         </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5>Medical Data Sharing</h5>
-                </div>
-                <div class="card-body">
-                    <h6>Temporary Stay:</h6>
-                    <ul>
-                        <li>One-time access to your medical records</li>
-                        <li>Access expires after consultation</li>
-                        <li>Limited to treatment history and current medications</li>
-                    </ul>
-                    <h6>Permanent Stay:</h6>
-                    <ul>
-                        <li>Full access to all medical data</li>
-                        <li>Ongoing access for comprehensive care</li>
-                        <li>Includes all historical records and test results</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
+  </div>
+
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function (position) {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.display_name) {
+              document.getElementById('current_location').value = data.display_name;
+            }
+          });
+      },
+      function () {
+        console.warn("Location access denied");
+      }
+    );
+  }
+});
+</script>
 {% endblock %}

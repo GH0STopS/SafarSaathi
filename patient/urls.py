@@ -21,4 +21,8 @@ urlpatterns = [
     path('book_telemedicine/', views.book_telemedicine_session, name='book_telemedicine'),
     path('health_metrics/', views.health_metrics, name='health_metrics'),
     path('add_health_metric/', views.add_health_metric, name='add_health_metric'),
+    path('notifications/', views.notifications, name='notifications'),
+    path('notifications/<int:notification_id>/read/', views.mark_notification_read, name='mark_notification_read'),
+    path('notifications/mark_all_read/', views.mark_all_notifications_read, name='mark_all_notifications_read'),
+    path('medication/<int:medication_id>/mark_taken/', views.mark_medication_taken, name='mark_medication_taken'),
 ]

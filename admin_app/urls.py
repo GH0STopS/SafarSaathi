@@ -5,9 +5,10 @@ app_name = 'admin_app'
 
 urlpatterns = [
     path('dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('clinic_management/', views.clinic_management, name='clinic_management'),
+    path('patient_management/', views.patient_management, name='patient_management'),
     path('approve_clinic/<int:clinic_id>/', views.approve_clinic, name='approve_clinic'),
     path('reject_clinic/<int:clinic_id>/', views.reject_clinic, name='reject_clinic'),
-    path('user_management/', views.user_management, name='user_management'),
     path('audit_logs/', views.audit_logs, name='audit_logs'),
     path('edit_patient/<int:patient_id>/', views.edit_patient, name='edit_patient'),
     path('edit_clinic/<int:clinic_id>/', views.edit_clinic, name='edit_clinic'),

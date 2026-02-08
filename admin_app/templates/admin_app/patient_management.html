@@ -1,0 +1,207 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Patient Management - Safar-Saathi{% endblock %}
+{% block page_title %}Patient Management{% endblock %}
+
+{% block content %}
+
+<!-- Filters Card -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white border-bottom">
+        <h5 class="mb-0">
+            <i class="fas fa-filter text-primary me-2"></i>
+            Filter Patients
+        </h5>
+    </div>
+    <div class="card-body">
+        <form method="get">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label for="clinic" class="form-label">Clinic</label>
+                    <select name="clinic" id="clinic" class="form-select">
+                        <option value="">All Clinics</option>
+                        {% for clinic in approved_clinics %}
+                        <option value="{{ clinic.id }}" {% if clinic_filter == clinic.id|stringformat:'s' %}selected{% endif %}>
+                            {{ clinic.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="active_status" class="form-label">Active Status</label>
+                    <select name="active_status" id="active_status" class="form-select">
+                        <option value="">All</option>
+                        <option value="active" {% if active_filter == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if active_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="location" class="form-label">Location</label>
+                    <input type="text" name="location" id="location" class="form-control" value="{{ location_filter }}" placeholder="Filter by location">
+                </div>
+                <div class="col-md-2">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" name="search" id="search" class="form-control" value="{{ search_query }}" placeholder="Search...">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-filter me-1"></i>Filter
+                    </button>
+                    <a href="{% url 'admin_app:patient_management' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Results Summary -->
+<div class="mb-3">
+    <div class="alert alert-info d-inline-flex align-items-center">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Total Patients: {{ total_patients|default:0 }}</strong>
+    </div>
+</div>
+
+<!-- Patients Table -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-bottom">
+        <h5 class="mb-0">
+            <i class="fas fa-users text-primary me-2"></i>
+            All Patients
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Full Name</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>DOB</th>
+                        <th>Location</th>
+                        <th>Clinic</th>
+                        <th>Status</th>
+                        <th>Consent</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for patient in patients %}
+                    <tr>
+                        <td><small class="text-muted">#{{ patient.id }}</small></td>
+                        <td>
+                            <strong>{{ patient.user.first_name }} {{ patient.user.last_name }}</strong>
+                            {% if patient.latitude and patient.longitude %}
+                            <br><small class="text-muted">📍 {{ patient.latitude|floatformat:4 }}, {{ patient.longitude|floatformat:4 }}</small>
+                            {% endif %}
+                        </td>
+                        <td>{{ patient.user.username }}</td>
+                        <td><small>{{ patient.user.email }}</small></td>
+                        <td>{{ patient.phone_number|default:"-" }}</td>
+                        <td><small class="text-muted">{{ patient.date_of_birth|date:"M d, Y"|default:"-" }}</small></td>
+                        <td>{{ patient.current_location|default:"-" }}</td>
+                        <td>
+                            {% if patient.current_clinic %}
+                            <span class="badge bg-info">{{ patient.current_clinic.name }}</span>
+                            {% else %}
+                            <span class="badge bg-warning">Not Assigned</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if patient.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if patient.consent_given %}
+                            <span class="badge bg-success"><i class="fas fa-check"></i></span>
+                            {% else %}
+                            <span class="badge bg-danger"><i class="fas fa-times"></i></span>
+                            {% endif %}
+                        </td>
+                        <td><small class="text-muted">{{ patient.created_at|date:"M d, Y"|default:"-" }}</small></td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                {% if patient.is_active %}
+                                <a href="{% url 'admin_app:deactivate_patient' patient.id %}" class="btn btn-warning btn-sm" title="Deactivate">
+                                    <i class="fas fa-ban"></i>
+                                </a>
+                                {% else %}
+                                <a href="{% url 'admin_app:activate_patient' patient.id %}" class="btn btn-success btn-sm" title="Activate">
+                                    <i class="fas fa-play"></i>
+                                </a>
+                                {% endif %}
+                                <a href="{% url 'admin_app:edit_patient' patient.id %}" class="btn btn-primary btn-sm" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="12" class="text-center text-muted py-5">
+                            <i class="fas fa-inbox fa-3x mb-3 d-block opacity-25"></i>
+                            No patients found matching the current filters.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Patient pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% if clinic_filter %}clinic={{ clinic_filter }}&{% endif %}{% if active_filter %}active_status={{ active_filter }}&{% endif %}{% if location_filter %}location={{ location_filter }}&{% endif %}{% if search_query %}search={{ search_query }}&{% endif %}page=1">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?{% if clinic_filter %}clinic={{ clinic_filter }}&{% endif %}{% if active_filter %}active_status={{ active_filter }}&{% endif %}{% if location_filter %}location={{ location_filter }}&{% endif %}{% if search_query %}search={{ search_query }}&{% endif %}page={{ page_obj.previous_page_number }}">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% if clinic_filter %}clinic={{ clinic_filter }}&{% endif %}{% if active_filter %}active_status={{ active_filter }}&{% endif %}{% if location_filter %}location={{ location_filter }}&{% endif %}{% if search_query %}search={{ search_query }}&{% endif %}page={{ num }}">{{ num }}</a>
+                </li>
+                {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% if clinic_filter %}clinic={{ clinic_filter }}&{% endif %}{% if active_filter %}active_status={{ active_filter }}&{% endif %}{% if location_filter %}location={{ location_filter }}&{% endif %}{% if search_query %}search={{ search_query }}&{% endif %}page={{ page_obj.next_page_number }}">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?{% if clinic_filter %}clinic={{ clinic_filter }}&{% endif %}{% if active_filter %}active_status={{ active_filter }}&{% endif %}{% if location_filter %}location={{ location_filter }}&{% endif %}{% if search_query %}search={{ search_query }}&{% endif %}page={{ page_obj.paginator.num_pages }}">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

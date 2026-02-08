@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 
 {% block title %}Emergency Alerts - Safar-Saathi{% endblock %}
 
@@ -42,7 +43,7 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-8">
-                            <p><strong>Alert Type:</strong> {{ alert.alert_type|title|replace:"_":" " }}</p>
+                            <p><strong>Alert Type:</strong> {{ alert.alert_type|replace:"_: "|title }}</p>
                             <p><strong>Message:</strong> {{ alert.alert_message }}</p>
                             {% if alert.location_address %}
                             <p><strong>Location:</strong> {{ alert.location_address }}</p>

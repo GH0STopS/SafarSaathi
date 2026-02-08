@@ -3,51 +3,53 @@
 {% block title %}Schedule Counselling Session - Safar-Saathi{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-12">
-            <h2><i class="fas fa-user-plus me-2"></i>Schedule Counselling Session</h2>
-            <a href="{% url 'clinic:manage_counselling_sessions' %}" class="btn btn-secondary mb-3"><i class="fas fa-arrow-left me-2"></i>Back to Counselling Management</a>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5>Session Details</h5>
-                </div>
-                <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="patient" class="form-label">Patient</label>
-                            <select class="form-control" id="patient" name="patient" required>
-                                {% for patient in patients %}
-                                <option value="{{ patient.id }}">{{ patient.user.get_full_name|default:patient.user.username }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="session_date" class="form-label">Session Date & Time</label>
-                            <input type="datetime-local" class="form-control" id="session_date" name="session_date" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="session_type" class="form-label">Session Type</label>
-                            <select class="form-control" id="session_type" name="session_type" required>
-                                <option value="individual">Individual Counselling</option>
-                                <option value="group">Group Counselling</option>
-                                <option value="family">Family Counselling</option>
-                                <option value="crisis">Crisis Intervention</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="notes" class="form-label">Initial Notes</label>
-                            <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Schedule Session</button>
-                    </form>
-                </div>
+<div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8">
+        <div class="card">
+            <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-user-plus me-2"></i>Schedule Counselling Session</h6>
+                <a href="{% url 'clinic:manage_counselling_sessions' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+            </div>
+            <div class="card-body p-3">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-2">
+                        <label for="patient" class="form-label small mb-1">Patient *</label>
+                        <select class="form-select form-select-sm" id="patient" name="patient" required>
+                            <option value="">Choose a patient</option>
+                            {% for patient in patients %}
+                            <option value="{{ patient.id }}">{{ patient.user.get_full_name|default:patient.user.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label for="session_date" class="form-label small mb-1">Session Date & Time *</label>
+                        <input type="datetime-local" class="form-control form-control-sm" id="session_date" name="session_date" required>
+                    </div>
+                    <div class="mb-2">
+                        <label for="session_type" class="form-label small mb-1">Session Type *</label>
+                        <select class="form-select form-select-sm" id="session_type" name="session_type" required>
+                            <option value="individual">Individual Counselling</option>
+                            <option value="group">Group Counselling</option>
+                            <option value="family">Family Counselling</option>
+                            <option value="crisis">Crisis Intervention</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="notes" class="form-label small mb-1">Initial Notes</label>
+                        <textarea class="form-control form-control-sm" id="notes" name="notes" rows="3" placeholder="Optional session notes..."></textarea>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="fas fa-calendar-plus me-1"></i>Schedule Session
+                        </button>
+                        <a href="{% url 'clinic:manage_counselling_sessions' %}" class="btn btn-outline-secondary btn-sm">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

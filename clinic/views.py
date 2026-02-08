@@ -1,14 +1,16 @@
-from django.shortcuts import render, redirect
+from datetime import datetime
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.contrib.auth.models import User, Group
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 from django.db import IntegrityError, transaction
 from django.http import Http404
 from .models import ClinicProfile
 from .forms import ClinicRegistrationForm, AppointmentForm, TreatmentRecordForm, CounsellingSessionForm
-from patient.models import PatientProfile, TransferRequest, TreatmentRecord, Appointment, CounsellingSession, ExternalConsultation, MedicalDataRequest, Prescription, MedicationReminder, TelemedicineSession, HealthMetric
+from patient.models import MedicationIntake, PatientProfile, TransferRequest, TreatmentRecord, Appointment, CounsellingSession, ExternalConsultation, MedicalDataRequest, Prescription, MedicationReminder, TelemedicineSession, HealthMetric
 from geopy.geocoders import Nominatim
 from safar_saathi.utils import is_clinic_staff
 import logging
@@ -245,27 +247,141 @@ def reject_transfer(request, request_id):
         messages.success(request, 'Transfer rejected!')
     return redirect('clinic:clinic_dashboard')
 
+# @login_required
+# @user_passes_test(is_clinic)
+# def create_prescription(request):
+#     clinic = request.user.clinicprofile
+#     if request.method == 'POST':
+#         patient_id = request.POST['patient']
+#         diagnosis = request.POST['diagnosis']
+#         medications = request.POST.getlist('medications[]')
+#         dosages = request.POST.getlist('dosages[]')
+#         instructions = request.POST.get('instructions', '')
+#         follow_up_date = request.POST.get('follow_up_date')
+
+#         patient = PatientProfile.objects.get(id=patient_id)
+
+#         # Create prescription with medications as JSON
+#         meds_list = []
+#         for i in range(len(medications)):
+#             if i < len(dosages):
+#                 meds_list.append({
+#                     'name': medications[i],
+#                     'dosage': dosages[i]
+#                 })
+
+#         prescription = Prescription.objects.create(
+#             patient=patient,
+#             clinic=clinic,
+#             doctor=request.user,
+#             diagnosis=diagnosis,
+#             medications=meds_list,
+#             instructions=instructions,
+#             follow_up_date=follow_up_date if follow_up_date else None
+#         )
+
+#         messages.success(request, 'Prescription created successfully.')
+#         return redirect('clinic:manage_prescriptions')
+
+#     patients = PatientProfile.objects.filter(current_clinic=clinic)
+#     context = {
+#         'patients': patients,
+#     }
+#     return render(request, 'clinic/create_prescription.html', context)
 
 @login_required
 @user_passes_test(is_clinic)
 def add_treatment_record(request):
     clinic = request.user.clinicprofile
+
     if request.method == 'POST':
-        patient_id = request.POST['patient']
-        disease = request.POST['disease']
-        details = request.POST['details']
-        patient = PatientProfile.objects.get(id=patient_id)
-        TreatmentRecord.objects.create(
-            patient=patient,
-            clinic=clinic,
-            disease=disease,
-            details=details
-        )
-        messages.success(request, 'Treatment record added!')
+        patient_id = request.POST.get('patient')
+        disease = request.POST.get('disease')
+        details = request.POST.get('details')
+
+        # Prescription fields (optional)
+        diagnosis = request.POST.get('diagnosis', '').strip()
+        medications = request.POST.getlist('medications[]')
+        dosages = request.POST.getlist('dosages[]')
+        instructions = request.POST.get('instructions', '').strip()
+        follow_up_date = request.POST.get('follow_up_date')
+        frequency = request.POST.get('frequency', 'once daily')
+        intake_times = request.POST.getlist('intake_times[]')
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
+
+        patient = get_object_or_404(PatientProfile, id=patient_id)
+
+        with transaction.atomic():
+            # -------------------------------
+            # 1. Create Treatment Record
+            # -------------------------------
+            TreatmentRecord.objects.create(
+                patient=patient,
+                clinic=clinic,
+                disease=disease,
+                details=details
+            )
+
+            # -------------------------------
+            # 2. Build medications JSON
+            # -------------------------------
+            meds_list = []
+            for i in range(len(medications)):
+                med_name = medications[i].strip()
+                dosage = dosages[i].strip() if i < len(dosages) else ''
+                frequency = frequency if i < len(frequency) else 'once daily'
+                intake_time = intake_times[i].strip() if i < len(intake_times) else '09:00'
+                start_date_val = start_date if i < len(start_date) else timezone.now().date()
+                end_date_val = end_date if i < len(end_date) else None
+                
+
+                if med_name:  # ignore empty rows
+                    meds_list.append({
+                        'name': med_name,
+                        'dosage': dosage
+                    })
+
+            # -------------------------------
+            # 3. Create Prescription ONLY if valid
+            # -------------------------------
+            if diagnosis and meds_list:
+                prescription = Prescription.objects.create(
+                    patient=patient,
+                    clinic=clinic,
+                    doctor=request.user,
+                    diagnosis=diagnosis,
+                    medications=meds_list,
+                    instructions=instructions,
+                    follow_up_date=follow_up_date or None
+                )
+
+                # -------------------------------
+                # 4. (Optional but Recommended)
+                # Auto-create Medication Reminders
+                # -------------------------------
+                for med in meds_list:
+                    medicationR = MedicationReminder.objects.create(
+                        prescription=prescription,
+                        medication_name=med['name'],
+                        dosage=med['dosage'],
+                        frequency=frequency,  # can be extended later
+                        
+                        start_date=start_date_val,
+                        end_date=end_date_val
+                    )
+                    times = intake_times[i].split(',')
+                    for time in times:
+                        MedicationIntake.objects.create(
+                            reminder=medicationR,
+                            intake_time=datetime.strptime(time.strip(), '%H:%M').time()
+                        )
+
+        messages.success(request, 'Treatment record added successfully.')
         return redirect('clinic:clinic_dashboard')
+
     patients = PatientProfile.objects.filter(current_clinic=clinic)
-    context = {'patients': patients}
-    return render(request, 'clinic/add_treatment.html', context)
+    return render(request, 'clinic/add_treatment.html', {'patients': patients})
 
 
 @login_required
@@ -286,9 +402,19 @@ def update_appointment_status(request, appointment_id):
     if request.method == 'POST':
         status = request.POST['status']
         notes = request.POST.get('notes', '')
+        meeting_link = request.POST.get('meeting_link', '')
+        meeting_id = request.POST.get('meeting_id', '')
+        meeting_password = request.POST.get('meeting_password', '')
+
         appointment.status = status
         if notes:
             appointment.notes += f"\n{notes}"
+        if meeting_link:
+            appointment.meeting_link = meeting_link
+        if meeting_id:
+            appointment.meeting_id = meeting_id
+        if meeting_password:
+            appointment.meeting_password = meeting_password
         appointment.save()
 
         # If appointment is completed, update treatment record
@@ -386,11 +512,13 @@ def external_consultations(request):
     requested_consultations = ExternalConsultation.objects.filter(requesting_clinic=clinic).order_by('-consultation_date')
     # Consultations where this clinic is the parent clinic
     parent_consultations = ExternalConsultation.objects.filter(parent_clinic=clinic).order_by('-consultation_date')
-
+    logger.info(f"External consultations - Requested: {requested_consultations.count()}, Parent: {parent_consultations.count()}")
     context = {
         'requested_consultations': requested_consultations,
         'parent_consultations': parent_consultations,
     }
+    logger.info(f"{parent_consultations[0].requesting_clinic.name if parent_consultations else 'No requested consultations'} - {parent_consultations[0].parent_clinic.name if parent_consultations else 'No parent consultations'}")
+    logger.info(f"user {parent_consultations[0].patient.user.get_full_name() if parent_consultations else 'No parent consultations'}")
     return render(request, 'clinic/external_consultations.html', context)
 
 
@@ -426,7 +554,7 @@ def medical_data_requests(request):
     received_requests = MedicalDataRequest.objects.filter(parent_clinic=clinic).order_by('-created_at')
     # Requests where this clinic is requesting data
     sent_requests = MedicalDataRequest.objects.filter(requesting_clinic=clinic).order_by('-created_at')
-
+    logger.info(f"Medical data requests - Received: {received_requests.count()}, Sent: {sent_requests.count()}")
     context = {
         'received_requests': received_requests,
         'sent_requests': sent_requests,
@@ -467,47 +595,19 @@ def manage_prescriptions(request):
     return render(request, 'clinic/manage_prescriptions.html', context)
 
 
+
+
+
 @login_required
 @user_passes_test(is_clinic)
-def create_prescription(request):
-    clinic = request.user.clinicprofile
+def update_prescription(request, prescription_id):
+    prescription = get_object_or_404(Prescription, id=prescription_id, clinic=request.user.clinicprofile)
     if request.method == 'POST':
-        patient_id = request.POST['patient']
-        diagnosis = request.POST['diagnosis']
-        medications = request.POST.getlist('medications[]')
-        dosages = request.POST.getlist('dosages[]')
-        instructions = request.POST.get('instructions', '')
-        follow_up_date = request.POST.get('follow_up_date')
-
-        patient = PatientProfile.objects.get(id=patient_id)
-
-        # Create prescription with medications as JSON
-        meds_list = []
-        for i in range(len(medications)):
-            if i < len(dosages):
-                meds_list.append({
-                    'name': medications[i],
-                    'dosage': dosages[i]
-                })
-
-        prescription = Prescription.objects.create(
-            patient=patient,
-            clinic=clinic,
-            doctor=request.user,
-            diagnosis=diagnosis,
-            medications=meds_list,
-            instructions=instructions,
-            follow_up_date=follow_up_date if follow_up_date else None
-        )
-
-        messages.success(request, 'Prescription created successfully.')
-        return redirect('clinic:manage_prescriptions')
-
-    patients = PatientProfile.objects.filter(current_clinic=clinic)
-    context = {
-        'patients': patients,
-    }
-    return render(request, 'clinic/create_prescription.html', context)
+        status = request.POST['status']
+        prescription.status = status
+        prescription.save()
+        messages.success(request, f'Prescription status updated to {status}.')
+    return redirect('clinic:manage_prescriptions')
 
 
 @login_required

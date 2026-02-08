@@ -1,81 +1,52 @@
 {% extends 'base.html' %}
-
 {% block title %}Home - Safar-Saathi{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
-<div class="hero-section text-center py-5 mb-5"
-    style="background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%); color: white; border-radius: 15px; animation: fadeIn 1.5s ease-in;">
-    <div class="container">
-        <h1 class="display-4 fw-bold mb-3">Welcome to Safar-Saathi</h1>
-        <p class="lead mb-4">A secure, patient-centric digital platform to prevent Lost to Follow-Up among migrant
-            People Living with HIV.</p>
-        <a href="{% url 'patient:register' %}" class="btn btn-light btn-lg me-3 px-4 py-2">Register as Patient</a>
-        <a href="{% url 'clinic:clinic_register' %}" class="btn btn-outline-light btn-lg px-4 py-2">Register Clinic</a>
+<div class="card mb-4 text-center p-5"
+     style="background: linear-gradient(135deg, #3b82f6, #1e40af); color:white;">
+    <h1 class="fw-bold mb-3">Welcome to Safar-Saathi</h1>
+    <p class="lead mb-4">
+        A secure, patient-centric digital platform preventing Lost-to-Follow-Up
+        among migrant People Living with HIV.
+    </p>
+    <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a href="{% url 'patient:register' %}" class="btn btn-light btn-lg">
+            Register as Patient
+        </a>
+        <a href="{% url 'clinic:clinic_register' %}" class="btn btn-outline-light btn-lg">
+            Register Clinic
+        </a>
     </div>
 </div>
 
-<div class="row mt-5">
-    <div class="col-md-4 mb-4">
-        <div class="card h-100 text-center">
-            <div class="card-body d-flex flex-column">
-                <div class="icon mb-3" style="font-size: 3rem; color: #dc3545;">
-                    <i class="fas fa-user-md"></i>
-                </div>
-                <h5 class="card-title">Patient Module</h5>
-                <p class="card-text flex-grow-1">Register, manage treatment continuity, locate clinics, request
-                    transfers, and access emergency support.</p>
-                <a href="{% url 'patient:register' %}" class="btn btn-primary mt-auto">Learn More</a>
-            </div>
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card h-100 text-center p-4">
+            <i class="fas fa-user-md fa-3x text-primary mb-3"></i>
+            <h5>Patient Module</h5>
+            <p class="text-muted">
+                Manage treatment continuity, clinic transfers, and emergencies.
+            </p>
         </div>
     </div>
-    <div class="col-md-4 mb-4">
-        <div class="card h-100 text-center">
-            <div class="card-body d-flex flex-column">
-                <div class="icon mb-3" style="font-size: 3rem; color: #dc3545;">
-                    <i class="fas fa-hospital"></i>
-                </div>
-                <h5 class="card-title">Clinic Module</h5>
-                <p class="card-text flex-grow-1">Securely request and continue patient treatment with append-only
-                    records and controlled access.</p>
-                <a href="{% url 'clinic:clinic_register' %}" class="btn btn-primary mt-auto">Learn More</a>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4 mb-4">
-        <div class="card h-100 text-center">
-            <div class="card-body d-flex flex-column">
-                <div class="icon mb-3" style="font-size: 3rem; color: #dc3545;">
-                    <i class="fas fa-ambulance"></i>
-                </div>
-                <h5 class="card-title">Emergency Access</h5>
-                <p class="card-text flex-grow-1">Immediate, time-bound access during critical medical situations with
-                    automatic revocation.</p>
-                <a href="{% url 'login' %}" class="btn btn-primary mt-auto">Access Now</a>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div class="row mt-5">
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title" style="color: #dc3545;"><i class="fas fa-shield-alt me-2"></i>Admin Module</h5>
-                <p class="card-text">Govern clinic onboarding, monitor system activity, and review audit logs without
-                    accessing sensitive data.</p>
-            </div>
+    <div class="col-md-4">
+        <div class="card h-100 text-center p-4">
+            <i class="fas fa-hospital fa-3x text-primary mb-3"></i>
+            <h5>Clinic Module</h5>
+            <p class="text-muted">
+                Secure append-only medical records with controlled access.
+            </p>
         </div>
     </div>
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title" style="color: #dc3545;"><i class="fas fa-brain me-2"></i>Mental Health Support
-                </h5>
-                <p class="card-text">Privacy-isolated psychological support with counselor assignment and secure
-                    sessions.</p>
-            </div>
+
+    <div class="col-md-4">
+        <div class="card h-100 text-center p-4">
+            <i class="fas fa-ambulance fa-3x text-primary mb-3"></i>
+            <h5>Emergency Access</h5>
+            <p class="text-muted">
+                Time-bound emergency data access with automatic revocation.
+            </p>
         </div>
     </div>
 </div>

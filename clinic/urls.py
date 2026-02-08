@@ -26,7 +26,8 @@ urlpatterns = [
     path('approve_data_request/<int:request_id>/', views.approve_medical_data_request, name='approve_data_request'),
     path('deny_data_request/<int:request_id>/', views.deny_medical_data_request, name='deny_data_request'),
     path('manage_prescriptions/', views.manage_prescriptions, name='manage_prescriptions'),
-    path('create_prescription/', views.create_prescription, name='create_prescription'),
+#     path('create_prescription/', views.create_prescription, name='create_prescription'),
+    path('update_prescription/<int:prescription_id>/', views.update_prescription, name='update_prescription'),
     path('telemedicine/', views.telemedicine_management, name='telemedicine_management'),
     path('update_telemedicine/<int:session_id>/', views.update_telemedicine_session, name='update_telemedicine_session'),
 ]

@@ -1,154 +1,160 @@
 {% extends 'base.html' %}
-
 {% block title %}Clinic Dashboard - Safar-Saathi{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card" style="background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%); color: white;">
-            <div class="card-body text-center py-4">
-                <h2 class="mb-2"><i class="fas fa-hospital me-2"></i>{{ clinic.name }}</h2>
-                <p class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>{{ clinic.location }}</p>
-            </div>
-        </div>
+<style>
+  .card-soft {
+    background: #f8fafc;
+  }
+  .card-header-soft {
+    background: #f1f5f9;
+    font-weight: 600;
+  }
+  .action-btn {
+    padding: 1.25rem;
+    font-weight: 600;
+  }
+</style>
+
+<!-- Header -->
+<div class="card mb-3">
+  <div class="card-body py-3 d-flex justify-content-between align-items-center">
+    <div>
+      <h4 class="mb-1">
+        <i class="fas fa-hospital me-2 text-danger"></i>
+        {{ clinic.name }}
+      </h4>
+      <small class="text-muted">
+        <i class="fas fa-map-marker-alt me-1"></i>
+        {{ clinic.location }}
+      </small>
     </div>
+  </div>
 </div>
 
-<div class="row mt-4">
-    <div class="col-md-6 mb-4">
-        <div class="card h-100">
-            <div class="card-header"
-                style="background: linear-gradient(90deg, #dc3545 0%, #b02a37 100%); color: white;">
-                <h5 class="mb-0"><i class="fas fa-exchange-alt me-2"></i>Transfer Requests</h5>
-            </div>
-            <div class="card-body">
-                {% for request in transfer_requests %}
-                <div class="mb-3 p-3" style="background: #f8f9fa; border-radius: 10px;">
-                    <p class="mb-1"><strong>Patient:</strong> {{ request.patient.user.get_full_name }}</p>
-                    <p class="mb-1"><strong>From:</strong> {{ request.from_clinic.name }}</p>
-                    <p class="mb-1"><strong>Reason:</strong> {{ request.reason }}</p>
-                    <p class="mb-0">Status: <span
-                            class="badge bg-{% if request.status == 'approved' %}success{% elif request.status == 'pending' %}warning{% else %}danger{% endif %}">{{
-                            request.status|title }}</span></p>
-                    {% if request.status == 'pending' %}
-                    <div class="mt-2">
-                        <a href="{% url 'clinic:approve_transfer' request.id %}"
-                            class="btn btn-success btn-sm me-2">Approve</a>
-                        <a href="{% url 'clinic:reject_transfer' request.id %}" class="btn btn-danger btn-sm">Reject</a>
-                    </div>
-                    {% endif %}
-                </div>
-                {% empty %}
-                <p class="text-muted">No transfer requests.</p>
-                {% endfor %}
-            </div>
+<!-- Transfers + Treatments -->
+<div class="row g-3">
+
+  <!-- Transfer Requests -->
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header card-header-soft py-2">
+        <i class="fas fa-exchange-alt me-1"></i> Transfer Requests
+      </div>
+      <div class="card-body py-2">
+        {% for request in transfer_requests %}
+        <div class="border rounded p-2 mb-2 bg-light">
+          <small class="fw-semibold">
+            {{ request.patient.user.get_full_name|default:request.patient.user.username }}
+          </small>
+          <div class="small text-muted">
+            From {{ request.from_clinic.name }}
+          </div>
+
+          <span class="badge bg-{% if request.status == 'approved' %}success{% elif request.status == 'pending' %}warning{% else %}danger{% endif %}">
+            {{ request.status|title }}
+          </span>
+
+          {% if request.status == 'pending' %}
+          <div class="mt-2">
+            <a href="{% url 'clinic:approve_transfer' request.id %}" class="btn btn-success btn-sm">Approve</a>
+            <a href="{% url 'clinic:reject_transfer' request.id %}" class="btn btn-danger btn-sm">Reject</a>
+          </div>
+          {% endif %}
         </div>
+        {% empty %}
+        <p class="text-muted small mb-0">No transfer requests.</p>
+        {% endfor %}
+      </div>
     </div>
-    <div class="col-md-6 mb-4">
-        <div class="card h-100">
-            <div class="card-header"
-                style="background: linear-gradient(90deg, #dc3545 0%, #b02a37 100%); color: white;">
-                <h5 class="mb-0"><i class="fas fa-notes-medical me-2"></i>Recent Treatments</h5>
-            </div>
-            <div class="card-body">
-                {% for record in treatment_records %}
-                <div class="mb-3 p-3" style="background: #f8f9fa; border-radius: 10px;">
-                    <p class="mb-1"><strong>{{ record.patient.user.username }}</strong></p>
-                    <p class="mb-0">{{ record.details }}</p>
-                </div>
-                {% empty %}
-                <p class="text-muted">No recent treatments.</p>
-                {% endfor %}
-            </div>
+  </div>
+
+  <!-- Recent Treatments -->
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header card-header-soft py-2">
+        <i class="fas fa-notes-medical me-1"></i> Recent Treatments
+      </div>
+      <div class="card-body py-2">
+        {% for record in treatment_records %}
+        <div class="border rounded p-2 mb-2 bg-light">
+          <small class="fw-semibold">
+            {{ record.patient.user.get_full_name|default:record.patient.user.username }}
+          </small>
+          <div class="small text-muted">
+            {{ record.details|truncatechars:80 }}
+          </div>
         </div>
+        {% empty %}
+        <p class="text-muted small mb-0">No recent treatments.</p>
+        {% endfor %}
+      </div>
     </div>
+  </div>
+
 </div>
 
-    <!-- Primary Actions -->
-    <div class="row mt-4">
-        <div class="col-md-3 mb-3">
-            <a href="{% url 'clinic:manage_appointments' %}" class="btn btn-success w-100 h-100 d-flex flex-column align-items-center justify-content-center py-4"
-                style="border-radius: 15px; min-height: 120px;">
-                <i class="fas fa-calendar-alt fa-2x mb-2"></i>
-                <span class="fw-bold">Manage Appointments</span>
-                <small class="text-success-emphasis">Schedule & track</small>
-            </a>
-        </div>
-        <div class="col-md-3 mb-3">
-            <a href="{% url 'clinic:manage_counselling_sessions' %}" class="btn btn-info w-100 h-100 d-flex flex-column align-items-center justify-content-center py-4"
-                style="border-radius: 15px; min-height: 120px;">
-                <i class="fas fa-user-friends fa-2x mb-2"></i>
-                <span class="fw-bold">Counselling Sessions</span>
-                <small class="text-info-emphasis">Support & therapy</small>
-            </a>
-        </div>
-        <div class="col-md-3 mb-3">
-            <a href="{% url 'clinic:external_consultations' %}" class="btn btn-warning w-100 h-100 d-flex flex-column align-items-center justify-content-center py-4"
-                style="border-radius: 15px; min-height: 120px;">
-                <i class="fas fa-globe fa-2x mb-2"></i>
-                <span class="fw-bold">External Consultations</span>
-                <small class="text-warning-emphasis">Out-of-town care</small>
-            </a>
-        </div>
-        <div class="col-md-3 mb-3">
-            <a href="{% url 'clinic:telemedicine_management' %}" class="btn btn-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center py-4"
-                style="border-radius: 15px; min-height: 120px;">
-                <i class="fas fa-video fa-2x mb-2"></i>
-                <span class="fw-bold">Telemedicine</span>
-                <small class="text-primary-emphasis">Virtual care</small>
-            </a>
-        </div>
-    </div>
+<!-- Primary Actions -->
+<div class="row g-2 mt-3">
+  <div class="col-md-3 col-6">
+    <a href="{% url 'clinic:manage_appointments' %}" class="btn btn-success w-100 action-btn">
+      <i class="fas fa-calendar-alt d-block mb-1"></i>
+      Appointments
+    </a>
+  </div>
+  <div class="col-md-3 col-6">
+    <a href="{% url 'clinic:manage_counselling_sessions' %}" class="btn btn-info w-100 action-btn">
+      <i class="fas fa-user-friends d-block mb-1"></i>
+      Counselling
+    </a>
+  </div>
+  <div class="col-md-3 col-6">
+    <a href="{% url 'clinic:external_consultations' %}" class="btn btn-warning w-100 action-btn">
+      <i class="fas fa-globe d-block mb-1"></i>
+      External
+    </a>
+  </div>
+  <div class="col-md-3 col-6">
+    <a href="{% url 'clinic:telemedicine_management' %}" class="btn btn-primary w-100 action-btn">
+      <i class="fas fa-video d-block mb-1"></i>
+      Telemedicine
+    </a>
+  </div>
+</div>
 
-    <!-- Secondary Actions -->
-    <div class="row mt-3">
-        <div class="col-md-3 mb-3">
-            <a href="{% url 'clinic:manage_prescriptions' %}" class="btn btn-outline-info w-100 d-flex flex-column align-items-center py-3"
-                style="border-radius: 15px;">
-                <i class="fas fa-pills fa-lg mb-1"></i>
-                <small class="fw-bold">Prescriptions</small>
-            </a>
-        </div>
-        <div class="col-md-3 mb-3">
-            <a href="{% url 'clinic:medical_data_requests' %}" class="btn btn-outline-warning w-100 d-flex flex-column align-items-center py-3"
-                style="border-radius: 15px;">
-                <i class="fas fa-database fa-lg mb-1"></i>
-                <small class="fw-bold">Data Requests</small>
-            </a>
-        </div>
-        <div class="col-md-3 mb-3">
-            <a href="{% url 'clinic:clinic_transfer_request' %}" class="btn btn-primary w-100 d-flex flex-column align-items-center py-3"
-                style="border-radius: 15px;">
-                <i class="fas fa-paper-plane fa-lg mb-1"></i>
-                <small class="fw-bold">Initiate Transfer</small>
-            </a>
-        </div>
-        <div class="col-md-3 mb-3">
-            <a href="{% url 'clinic:add_treatment_record' %}" class="btn btn-secondary w-100 d-flex flex-column align-items-center py-3"
-                style="border-radius: 15px;">
-                <i class="fas fa-plus fa-lg mb-1"></i>
-                <small class="fw-bold">Add Treatment</small>
-            </a>
-        </div>
-    </div>
+<!-- Secondary Actions -->
+<div class="row g-2 mt-2">
+  <div class="col-md-3 col-6">
+    <a href="{% url 'clinic:manage_prescriptions' %}" class="btn btn-outline-info w-100">
+      Prescriptions
+    </a>
+  </div>
+  <div class="col-md-3 col-6">
+    <a href="{% url 'clinic:medical_data_requests' %}" class="btn btn-outline-warning w-100">
+      Data Requests
+    </a>
+  </div>
+  <div class="col-md-3 col-6">
+    <a href="{% url 'clinic:clinic_transfer_request' %}" class="btn btn-outline-primary w-100">
+      Transfers
+    </a>
+  </div>
+  <div class="col-md-3 col-6">
+    <a href="{% url 'clinic:add_treatment_record' %}" class="btn btn-outline-secondary w-100">
+      Add Treatment
+    </a>
+  </div>
+</div>
 
-    <!-- Tertiary Actions -->
-    <div class="row mt-3">
-        <div class="col-md-6 mb-3">
-            <a href="{% url 'clinic:schedule_counselling' %}" class="btn btn-outline-info w-100 d-flex align-items-center justify-content-center py-3"
-                style="border-radius: 15px;">
-                <i class="fas fa-user-plus fa-lg me-2"></i>
-                <span class="fw-bold">Schedule Counselling Session</span>
-            </a>
-        </div>
-        <div class="col-md-6 mb-3">
-            <a href="{% url 'emergency:emergency_alerts' %}" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center py-3"
-                style="border-radius: 15px;">
-                <i class="fas fa-exclamation-triangle fa-lg me-2"></i>
-                <span class="fw-bold">Emergency Alerts</span>
-            </a>
-        </div>
-    </div>
+<!-- Emergency -->
+<div class="row g-2 mt-3">
+  <div class="col-12">
+    <a href="{% url 'emergency:emergency_alerts' %}" class="btn btn-outline-danger w-100 py-3">
+      <i class="fas fa-exclamation-triangle me-2"></i>
+      Emergency Alerts
+    </a>
+  </div>
+</div>
+
 {% endblock %}

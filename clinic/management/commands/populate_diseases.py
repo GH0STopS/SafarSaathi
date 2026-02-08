@@ -7,7 +7,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         diseases = [
-            {'name': 'HIV/AIDS', 'description': 'Human Immunodeficiency Virus infection and acquired immune deficiency syndrome'},
+            {'name': 'HIV', 'description': 'Human Immunodeficiency Virus infection and acquired immune deficiency syndrome'},
             {'name': 'Tuberculosis', 'description': 'Infectious disease caused by Mycobacterium tuberculosis'},
             {'name': 'Malaria', 'description': 'Mosquito-borne infectious disease'},
             {'name': 'Hepatitis B', 'description': 'Viral infection that attacks the liver'},

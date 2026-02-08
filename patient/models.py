@@ -26,7 +26,7 @@ class TreatmentRecord(models.Model):
     patient = models.ForeignKey(PatientProfile, on_delete=models.CASCADE)
     clinic = models.ForeignKey(
         'clinic.ClinicProfile', on_delete=models.CASCADE)
-    disease = models.CharField(max_length=100, default='HIV')  # e.g., HIV, TB, etc.
+    disease = models.CharField(max_length=100, default='HIV')  
     record_date = models.DateTimeField(default=timezone.now)
     details = models.TextField()  # Append-only treatment details
     is_emergency = models.BooleanField(default=False)
@@ -68,18 +68,27 @@ class Appointment(models.Model):
     ]
     patient = models.ForeignKey(PatientProfile, on_delete=models.CASCADE)
     clinic = models.ForeignKey('clinic.ClinicProfile', on_delete=models.CASCADE)
-    doctor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='doctor_appointments')
+    # doctor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='doctor_appointments')
     appointment_date = models.DateTimeField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='scheduled')
     appointment_type = models.CharField(max_length=50, choices=[
-        ('consultation', 'General Consultation'),
+        ('general', 'General Consultation'),
         ('follow_up', 'Follow-up'),
         ('emergency', 'Emergency'),
         ('checkup', 'Regular Checkup'),
     ], default='consultation')
+    consultation_mode = models.CharField(max_length=20, choices=[
+        ('in_person', 'In Person'),
+        ('online', 'Online/Video Call'),
+        ('phone', 'Phone Call'),
+    ], default='in_person')
+    meeting_link = models.URLField(blank=True, help_text="Video call link for online consultations")
+    meeting_id = models.CharField(max_length=100, blank=True, help_text="Meeting ID for online consultations")
+    meeting_password = models.CharField(max_length=50, blank=True, help_text="Meeting password if required")
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
+    password_viewed = models.BooleanField(default=False, help_text="Whether the patient has viewed the appointment password")
 
     class Meta:
         ordering = ['-appointment_date']
@@ -106,6 +115,14 @@ class CounsellingSession(models.Model):
         ('family', 'Family Counselling'),
         ('crisis', 'Crisis Intervention'),
     ], default='individual')
+    session_mode = models.CharField(max_length=20, choices=[
+        ('in_person', 'In Person'),
+        ('online', 'Online/Video Call'),
+        ('phone', 'Phone Call'),
+    ], default='in_person')
+    meeting_link = models.URLField(blank=True, help_text="Video call link for online sessions")
+    meeting_id = models.CharField(max_length=100, blank=True, help_text="Meeting ID for online sessions")
+    meeting_password = models.CharField(max_length=50, blank=True, help_text="Meeting password if required")
     notes = models.TextField(blank=True)
     medical_updates = models.TextField(blank=True, help_text="Medical data updates from session")
     follow_up_required = models.BooleanField(default=False)
@@ -245,19 +262,82 @@ class Prescription(models.Model):
 
 
 class MedicationReminder(models.Model):
-    prescription = models.ForeignKey(Prescription, on_delete=models.CASCADE)
+    prescription = models.ForeignKey(
+        Prescription,
+        on_delete=models.CASCADE,
+        related_name='medication_reminders'
+    )
+
     medication_name = models.CharField(max_length=100)
     dosage = models.CharField(max_length=50)
-    frequency = models.CharField(max_length=50)  # e.g., "twice daily", "every 8 hours"
-    reminder_times = models.JSONField(default=list)  # List of times for reminders
+
+    frequency = models.CharField(
+        max_length=50,
+        help_text="e.g. once daily, twice daily, every 8 hours"
+    )
+
+    
+
     start_date = models.DateField()
     end_date = models.DateField(null=True, blank=True)
+
     is_active = models.BooleanField(default=True)
     last_reminder_sent = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return f"Reminder: {self.medication_name} for {self.prescription.patient.user.username}"
+    
+# class MedicationList(models.Model):
+#     medication = models.ForeignKey(MedicationReminder, on_delete=models.CASCADE, related_name='medication_lists')
+#     intake_time = models.TimeField()
+#     has_taken = models.BooleanField(default=False)
+#     created_at = models.DateTimeField(default=timezone.now)
+    
+#     class Meta:
+#         ordering = ['-intake_time']
+#         unique_together = ['medication', 'intake_time']
+     
+#     def __str__(self):
+#         return f"{self.medication.medication_name} at {self.intake_time}"
+    
+
+# class MedicationLog(models.Model):
+#     reminder = models.ForeignKey(MedicationReminder, on_delete=models.CASCADE)
+#     scheduled_time = models.DateTimeField()
+#     taken_time = models.DateTimeField(null=True, blank=True)
+#     was_taken = models.BooleanField(default=False)
+#     notes = models.TextField(blank=True)
+#     created_at = models.DateTimeField(default=timezone.now)
+
+#     class Meta:
+#         ordering = ['-scheduled_time']
+#         unique_together = ['reminder', 'scheduled_time']
+
+#     def __str__(self):
+#         status = "Taken" if self.was_taken else "Missed"
+#         return f"{status}: {self.reminder.medication_name} at {self.scheduled_time}"
+
+class MedicationIntake(models.Model):
+    reminder = models.ForeignKey(
+        MedicationReminder,
+        on_delete=models.CASCADE,
+        related_name='intakes'
+    )
+
+    intake_time = models.TimeField()
+    intake_date = models.DateField(default=timezone.now)
+    has_taken = models.BooleanField(default=False)
+    taken_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ['reminder', 'intake_date', 'intake_time']
+        ordering = ['intake_time']
+
+    def __str__(self):
+        status = "Taken" if self.has_taken else "Pending"
+        return f"{self.reminder.medication_name} at {self.intake_time} ({status})"
+
 
 
 class TelemedicineSession(models.Model):
@@ -324,3 +404,31 @@ class HealthMetric(models.Model):
 
     def __str__(self):
         return f"{self.metric_type}: {self.value} for {self.patient.user.username}"
+
+
+class Notification(models.Model):
+    NOTIFICATION_TYPES = [
+        ('appointment_reminder', 'Appointment Reminder'),
+        ('medication_reminder', 'Medication Reminder'),
+        ('emergency_alert', 'Emergency Alert'),
+        ('transfer_request', 'Transfer Request'),
+        ('general', 'General Notification'),
+    ]
+
+    patient = models.ForeignKey(PatientProfile, on_delete=models.CASCADE, related_name='notifications')
+    notification_type = models.CharField(max_length=50, choices=NOTIFICATION_TYPES)
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    scheduled_at = models.DateTimeField(null=True, blank=True)  # For scheduled notifications
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['patient', 'is_read', 'created_at']),
+            models.Index(fields=['scheduled_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.notification_type}: {self.title} for {self.patient.user.username}"

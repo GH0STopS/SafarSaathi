@@ -34,6 +34,7 @@ class EmergencyAccess(models.Model):
     emergency_contacts_notified = models.BooleanField(default=False)
     response_time = models.DurationField(null=True, blank=True)
     resolution_notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
         if not self.expiry_time:

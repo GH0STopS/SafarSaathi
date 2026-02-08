@@ -104,6 +104,46 @@ def trigger_emergency(request):
                         location_address=location_address
                     )
 
+                # Find nearby clinics and create emergency access for them
+                if location_lat and location_lng:
+                    from geopy.distance import geodesic
+                    from clinic.models import ClinicProfile
+
+                    patient_location = (float(location_lat), float(location_lng))
+                    nearby_clinics = ClinicProfile.objects.filter(
+                        is_approved=True,
+                        is_active=True,
+                        latitude__isnull=False,
+                        longitude__isnull=False
+                    )
+
+                    for clinic in nearby_clinics:
+                        clinic_location = (clinic.latitude, clinic.longitude)
+                        distance = geodesic(patient_location, clinic_location).km
+                        if distance <= 50:  # Within 50 km
+                            # Check if clinic treats patient's diseases
+                            patient_diseases = set()
+                            if hasattr(patient, 'disease') and patient.disease:
+                                patient_diseases.add(patient.disease.lower())
+
+                            clinic_diseases = set(d.name.lower() for d in clinic.diseases_treated.all())
+
+                            # Create access if clinic is relevant or if no specific diseases
+                            if not clinic_diseases or patient_diseases & clinic_diseases:
+                                EmergencyAccess.objects.get_or_create(
+                                    patient=patient,
+                                    clinic=clinic,
+                                    defaults={
+                                        'requested_by': request.user,
+                                        'reason': f"Emergency alert: {alert_message}",
+                                        'emergency_type': emergency_type,
+                                        'severity_level': severity_level,
+                                        'location_lat': location_lat,
+                                        'location_lng': location_lng,
+                                        'location_address': location_address
+                                    }
+                                )
+
                 logger.warning(f"Emergency alert triggered by patient {request.user.username}: {alert_message}")
                 messages.success(request, 'Emergency alert sent! Help is on the way.')
                 return redirect('emergency:emergency_dashboard')

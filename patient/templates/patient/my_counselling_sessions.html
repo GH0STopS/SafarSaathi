@@ -1,54 +1,23 @@
 {% extends 'base.html' %}
-
-{% block title %}My Counselling Sessions - Safar-Saathi{% endblock %}
+{% block title %}Counselling Sessions{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-12">
-            <h2><i class="fas fa-user-friends me-2"></i>My Counselling Sessions</h2>
-            <a href="{% url 'patient:dashboard' %}" class="btn btn-secondary mb-3"><i class="fas fa-arrow-left me-2"></i>Back to Dashboard</a>
-        </div>
-    </div>
+<div class="container py-3">
 
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5>Counselling Session History</h5>
-                </div>
-                <div class="card-body">
-                    {% for session in sessions %}
-                    <div class="mb-3 p-3 border rounded">
-                        <div class="row">
-                            <div class="col-md-8">
-                                <h6>{{ session.session_type|title }} Counselling</h6>
-                                <p><strong>Date:</strong> {{ session.session_date }}</p>
-                                <p><strong>Counsellor:</strong> {{ session.counsellor.get_full_name|default:session.counsellor.username }}</p>
-                                <p><strong>Clinic:</strong> {{ session.clinic.name }}</p>
-                                {% if session.notes %}
-                                <p><strong>Notes:</strong> {{ session.notes }}</p>
-                                {% endif %}
-                                {% if session.medical_updates %}
-                                <p><strong>Medical Updates:</strong> {{ session.medical_updates }}</p>
-                                {% endif %}
-                                {% if session.follow_up_required %}
-                                <p><strong>Follow-up:</strong> {{ session.follow_up_date|default:"Scheduled" }}</p>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-4 text-end">
-                                <span class="badge bg-{% if session.status == 'completed' %}success{% elif session.status == 'scheduled' %}primary{% elif session.status == 'in_progress' %}info{% elif session.status == 'cancelled' %}danger{% endif %}">
-                                    {{ session.status|title }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    {% empty %}
-                    <p class="text-center">No counselling sessions found.</p>
-                    {% endfor %}
-                </div>
-            </div>
+  <h4 class="mb-3">Counselling Sessions</h4>
+
+  <div class="card">
+    <div class="card-body p-3">
+      {% for session in sessions %}
+        <div class="border rounded p-2 mb-2">
+          <strong>{{ session.session_type|title }}</strong><br>
+          {{ session.session_date }} – {{ session.status|title }}
         </div>
+      {% empty %}
+        <p class="text-muted text-center mb-0">No sessions</p>
+      {% endfor %}
     </div>
+  </div>
+
 </div>
 {% endblock %}

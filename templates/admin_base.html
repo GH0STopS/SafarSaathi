@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Admin - Safar-Saathi{% endblock %}</title>
+
+    <!-- Bootstrap & Icons -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --sidebar-width: 250px;
+        --topbar-height: 60px;
+        --primary-color: #3b82f6;
+        --sidebar-bg: #1e293b;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #f1f5f9;
+        overflow-x: hidden;
+      }
+
+      /* Sidebar */
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: var(--sidebar-width);
+        height: 100vh;
+        background: var(--sidebar-bg);
+        color: #fff;
+        transition: all 0.3s ease;
+        z-index: 1040;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        overflow-y: auto;
+      }
+
+      .sidebar.collapsed {
+        margin-left: calc(-1 * var(--sidebar-width));
+      }
+
+      .sidebar-header {
+        padding: 1.25rem;
+        font-size: 1.3rem;
+        font-weight: 700;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(0, 0, 0, 0.2);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+
+      .sidebar-header i {
+        color: var(--primary-color);
+      }
+
+      .sidebar-nav {
+        padding: 0.75rem 0;
+      }
+
+      .sidebar-nav a {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1.25rem;
+        color: #cbd5e1;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border-left: 3px solid transparent;
+        margin: 0.15rem 0;
+      }
+
+      .sidebar-nav a:hover {
+        background: rgba(59, 130, 246, 0.15);
+        color: #fff;
+        border-left-color: var(--primary-color);
+      }
+
+      .sidebar-nav a.active {
+        background: rgba(59, 130, 246, 0.25);
+        color: #fff;
+        border-left-color: var(--primary-color);
+        font-weight: 600;
+      }
+
+      .sidebar-nav i {
+        width: 20px;
+        margin-right: 0.75rem;
+        font-size: 1rem;
+      }
+
+      /* Main Content */
+      .main-content {
+        margin-left: var(--sidebar-width);
+        transition: margin-left 0.3s ease;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .sidebar.collapsed ~ .main-content {
+        margin-left: 0;
+      }
+
+      /* Top Navbar */
+      .top-navbar {
+        height: var(--topbar-height);
+        background: #fff;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 1.5rem;
+        position: sticky;
+        top: 0;
+        z-index: 1030;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      }
+
+      .navbar-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .sidebar-toggle {
+        background: none;
+        border: none;
+        font-size: 1.25rem;
+        color: #475569;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 0.375rem;
+        transition: all 0.2s;
+      }
+
+      .sidebar-toggle:hover {
+        background: #f1f5f9;
+        color: #1e293b;
+      }
+
+      .page-title {
+        font-size: 1.15rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin: 0;
+      }
+
+      .navbar-right {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.4rem 0.75rem;
+        background: #f8fafc;
+        border-radius: 0.5rem;
+        font-size: 0.9rem;
+      }
+
+      .user-avatar {
+        width: 30px;
+        height: 30px;
+        background: var(--primary-color);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.8rem;
+      }
+
+      /* Content Wrapper */
+      .content-wrapper {
+        flex: 1;
+        padding: 1.5rem;
+        max-width: 100%;
+      }
+
+      /* Mobile Overlay */
+      .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1035;
+      }
+
+      .sidebar-overlay.active {
+        display: block;
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .sidebar {
+          margin-left: calc(-1 * var(--sidebar-width));
+        }
+
+        .sidebar.show {
+          margin-left: 0;
+        }
+
+        .main-content {
+          margin-left: 0;
+        }
+
+        .page-title {
+          font-size: 1rem;
+        }
+
+        .content-wrapper {
+          padding: 1rem;
+        }
+
+        .user-info span {
+          display: none;
+        }
+      }
+
+      /* Custom Scrollbar */
+      .sidebar::-webkit-scrollbar {
+        width: 5px;
+      }
+
+      .sidebar::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .sidebar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 3px;
+      }
+
+      .sidebar::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      /* Card Improvements */
+      .card {
+        border: none;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        transition: all 0.2s;
+      }
+
+      .card:hover {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <i class="fas fa-heartbeat"></i>
+        <span>Safar-Saathi</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        {% block sidebar %}
+        <a href="{% url 'admin_app:admin_dashboard' %}">
+          <i class="fas fa-tachometer-alt"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="{% url 'admin_app:clinic_management' %}">
+          <i class="fas fa-clinic-medical"></i>
+          <span>Clinics</span>
+        </a>
+        <a href="{% url 'admin_app:patient_management' %}">
+          <i class="fas fa-users"></i>
+          <span>Patients</span>
+        </a>
+        <a href="{% url 'admin_app:disease_management' %}">
+          <i class="fas fa-viruses"></i>
+          <span>Diseases</span>
+        </a>
+        <a href="{% url 'admin_app:audit_logs' %}">
+          <i class="fas fa-file-alt"></i>
+          <span>Audit Logs</span>
+        </a>
+        <a href="{% url 'admin_app:profile' %}">
+          <i class="fas fa-user"></i>
+          <span>Profile</span>
+        </a>
+        {% endblock %}
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Top Navbar -->
+      <div class="top-navbar">
+        <div class="navbar-left">
+          <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-bars"></i>
+          </button>
+          <h1 class="page-title">
+            {% block page_title %}Admin Panel{% endblock %}
+          </h1>
+        </div>
+
+        <div class="navbar-right">
+          <div class="user-info">
+            <div class="user-avatar">{{ user.username|slice:":1"|upper }}</div>
+            <span>{{ user.username }}</span>
+          </div>
+          <form method="post" action="{% url 'logout' %}" class="d-inline">
+            {% csrf_token %}
+            <button
+              type="submit"
+              class="btn btn-outline-danger btn-sm"
+              title="Logout"
+            >
+              <i class="fas fa-sign-out-alt"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <main class="content-wrapper">
+        {% if messages %}
+        <div class="mb-3">
+          {% for message in messages %}
+          <div
+            class="alert alert-{{ message.tags }} alert-dismissible fade show"
+            role="alert"
+          >
+            {{ message }}
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="alert"
+            ></button>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %} {% block content %}{% endblock %}
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      const sidebar = document.getElementById("sidebar");
+      const sidebarToggle = document.getElementById("sidebarToggle");
+      const sidebarOverlay = document.getElementById("sidebarOverlay");
+
+      function toggleSidebar() {
+        const isMobile = window.innerWidth <= 768;
+
+        if (isMobile) {
+          sidebar.classList.toggle("show");
+          sidebarOverlay.classList.toggle("active");
+        } else {
+          sidebar.classList.toggle("collapsed");
+        }
+      }
+
+      sidebarToggle.addEventListener("click", toggleSidebar);
+      sidebarOverlay.addEventListener("click", toggleSidebar);
+
+      // Close sidebar on mobile when clicking outside
+      document.addEventListener("click", function (event) {
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile && sidebar.classList.contains("show")) {
+          if (
+            !sidebar.contains(event.target) &&
+            !sidebarToggle.contains(event.target)
+          ) {
+            sidebar.classList.remove("show");
+            sidebarOverlay.classList.remove("active");
+          }
+        }
+      });
+
+      // Set active nav link
+      const currentPath = window.location.pathname;
+      document.querySelectorAll(".sidebar-nav a").forEach((link) => {
+        if (link.getAttribute("href") === currentPath) {
+          link.classList.add("active");
+        }
+      });
+
+      // Handle window resize
+      window.addEventListener("resize", function () {
+        const isMobile = window.innerWidth <= 768;
+        if (!isMobile) {
+          sidebar.classList.remove("show");
+          sidebarOverlay.classList.remove("active");
+        }
+      });
+    </script>
+  </body>
+</html>
